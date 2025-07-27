@@ -3,7 +3,7 @@ import Game.Board;
 import java.awt.image.BufferedImage;
 
 public class King extends Piece{
-    public King(Board board, int col, int row, boolean isWhite)
+    public King(Board board, int col, int row, PieceColor color)
     {
         super(board);
         this.col = col;
@@ -11,11 +11,11 @@ public class King extends Piece{
         this.xpos = col * board.ts;
         this.ypos = row * board.ts;
 
-        this.isWhite = isWhite;
+        this.color = color;
         this.name = "King";
 
         
-        this.sprite = sT.getSubimage(0 * sTScale, isWhite ? 0 : sTScale, sTScale, sTScale).getScaledInstance(board.ts, board.ts, BufferedImage.SCALE_SMOOTH);
+        this.sprite = sT.getSubimage(0 * sTScale, this.color == PieceColor.WHITE ? 0 : sTScale, sTScale, sTScale).getScaledInstance(board.ts, board.ts, BufferedImage.SCALE_SMOOTH);
     }
 
 }

@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 
 
 public class Bishop extends Piece{
-    public Bishop(Board board, int col, int row, boolean isWhite)
+    public Bishop(Board board, int col, int row, PieceColor color)
     {
         super(board);
         this.col = col;
@@ -12,11 +12,11 @@ public class Bishop extends Piece{
         this.xpos = col * board.ts;
         this.ypos = row * board.ts;
 
-        this.isWhite = isWhite;
+        this.color = color;
         this.name = "Bishop";
 
         
-        this.sprite = sT.getSubimage( 2 * sTScale, isWhite ? 0 : sTScale, sTScale, sTScale).getScaledInstance(board.ts, board.ts, BufferedImage.SCALE_SMOOTH);
+        this.sprite = sT.getSubimage( 2 * sTScale, this.color == PieceColor.WHITE ? 0 : sTScale, sTScale, sTScale).getScaledInstance(board.ts, board.ts, BufferedImage.SCALE_SMOOTH);
     }
 
 }

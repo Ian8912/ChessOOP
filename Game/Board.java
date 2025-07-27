@@ -134,66 +134,6 @@ public class Board extends JPanel{
         /* 
          * 
 
-        else if(piece instanceof Bishop){
-            // checks for diagonal moves, up and to the right
-            for (int i = 1; fromRow - i > -1 && fromCol + i < 8; i++) {
-                if(getPiece(fromCol+i, fromRow-i) != null && 
-                fromRow - i == toRow && fromCol + i == toCol) {
-                    return true;
-                }
-                else if(getPiece(fromCol+i, fromRow-i) != null && 
-                fromRow - i > toRow && fromCol + i < toCol) {
-                    return false;
-                }
-                else if(fromRow - i == toRow && fromCol + i == toCol) {
-                    return true;
-                }
-              }
-            // checks for diagonal moves, up and to the left
-            for (int i = 1; fromRow - i > -1 && fromCol - i > -1; i++) {
-                if(getPiece(fromCol-i, fromRow-i) != null && 
-                fromRow - i == toRow && fromCol - i == toCol) {
-                    return true;
-                }
-                else if(getPiece(fromCol-i, fromRow-i) != null && 
-                fromRow - i > toRow && fromCol - i > toCol) {
-                    return false;
-                }
-                else if(fromRow - i == toRow && fromCol - i == toCol) {
-                    return true;
-                }
-            }
-            // checks for diagonal moves, down and to the right
-            for (int i = 1; fromRow + i < 8 && fromCol + i < 8; i++) {
-                if(getPiece(fromCol+i, fromRow+i) != null && 
-                fromRow + i == toRow && fromCol + i == toCol) {
-                    return true;
-                }
-                else if(getPiece(fromCol+i, fromRow+i) != null && 
-                fromRow + i < toRow && fromCol + i < toCol) {
-                    return false;
-                }
-                else if(fromRow + i == toRow && fromCol + i == toCol) {
-                    return true;
-                }
-            }
-            // checks for diagonal moves, down and to the left
-            for (int i = 1; fromRow + i < 8 && fromCol - i < 8; i++) {
-                if(getPiece(fromCol-i, fromRow+i) != null && 
-                fromRow + i == toRow && fromCol - i == toCol) {
-                    return true;
-                }
-                else if(getPiece(fromCol-i, fromRow+i) != null && 
-                fromRow + i < toRow && fromCol - i > toCol) {
-                    return false;
-                }
-                else if(fromRow + i == toRow && fromCol - i == toCol) {
-                    return true;
-                }
-            }
-              return false;
-        }
-
         else if (piece instanceof Queen) {
             if((fromRow != toRow && fromCol == toCol) || 
             (fromRow == toRow && fromCol != toCol)){

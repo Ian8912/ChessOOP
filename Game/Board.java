@@ -134,23 +134,6 @@ public class Board extends JPanel{
         /* 
          * 
 
-        else if(piece instanceof Knight){
-            int[] rowOffsets = {-2, -1, 1, 2, 2, 1, -1, -2};
-            int[] colOffsets = {1, 2, 2, 1, -1, -2, -2, -1};
-
-            for(int i = 0; i < 8; i++){
-                int newRow = fromRow + rowOffsets[i];
-                int newCol = fromCol + colOffsets[i];
-    
-                if(newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8){
-                    if(newRow == toRow && newCol == toCol){
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         else if(piece instanceof Bishop){
             // checks for diagonal moves, up and to the right
             for (int i = 1; fromRow - i > -1 && fromCol + i < 8; i++) {

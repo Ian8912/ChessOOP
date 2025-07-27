@@ -4,6 +4,8 @@ import javax.swing.*;
 public class GameRun {
     
     public static void main(String[] args){
+        System.out.println("GameRun launched");
+
         JFrame frame = new JFrame("Chess");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new GridBagLayout());

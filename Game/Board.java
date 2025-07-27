@@ -133,41 +133,6 @@ public class Board extends JPanel{
 
         /* 
          * 
-        else if(piece instanceof Rook){
-            boolean openPath = true;
-            if(toRow == fromRow && fromCol < toCol){
-                for(int i = fromCol + 1; i < toCol; i++){
-                    if(getPiece(i, fromRow) != null){
-                        openPath = false;
-                    }
-                }
-            }
-            if(toRow == fromRow && fromCol > toCol){
-                for(int i = fromCol - 1; i > toCol; i--){
-                    if(getPiece(i, fromRow) != null){
-                        openPath = false;
-                    }
-                }
-            }
-            if(toRow < fromRow && fromCol == toCol){
-                for(int i = fromRow - 1; i > toRow; i--){
-                    if(getPiece(fromCol, i) != null){
-                        openPath = false;
-                    }
-                }
-            }
-            if(toRow > fromRow && fromCol == toCol){
-                for(int i = fromRow + 1; i < toRow; i++){
-                    if(getPiece(fromCol, i) != null){
-                        openPath = false;
-                    }
-                }
-            }
-            if((((fromRow == toRow) && (fromCol != toCol)) || ((fromRow != toRow) && (fromCol == toCol)))  && (openPath)){
-                return true;
-            }
-            return false;
-        }
 
         else if(piece instanceof Knight){
             int[] rowOffsets = {-2, -1, 1, 2, 2, 1, -1, -2};

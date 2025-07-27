@@ -12,7 +12,7 @@ public class Piece {
     public int col, row;
     public int xpos, ypos;
 
-    public boolean isWhite;
+    protected PieceColor color;
     public String name;
     
     private boolean madeMove = false;
@@ -49,8 +49,8 @@ public class Piece {
         g2.drawImage(sprite, xpos, ypos, null);
     }
 
-    public boolean isWhite(){
-        return isWhite;
+    public PieceColor getColor(){
+        return color;
     }
 
 }

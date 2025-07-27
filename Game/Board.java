@@ -29,38 +29,38 @@ public class Board extends JPanel{
 
     public void addPieces()
     {
-        pieceList.add(new Knight(this, 1, 0, false));
-        pieceList.add(new Knight(this, 6, 0, false));
-        pieceList.add(new Knight(this, 1, 7, true));
-        pieceList.add(new Knight(this, 6, 7, true));
-        pieceList.add(new Pawn(this, 0, 6, true));
-        pieceList.add(new Pawn(this, 1, 6, true));
-        pieceList.add(new Pawn(this, 2, 6, true));
-        pieceList.add(new Pawn(this, 3, 6, true));
-        pieceList.add(new Pawn(this, 4, 6, true));
-        pieceList.add(new Pawn(this, 5, 6, true));
-        pieceList.add(new Pawn(this, 6, 6, true));
-        pieceList.add(new Pawn(this, 7, 6, true));
-        pieceList.add(new Pawn(this, 0, 1, false));
-        pieceList.add(new Pawn(this, 1, 1, false));
-        pieceList.add(new Pawn(this, 2, 1, false));
-        pieceList.add(new Pawn(this, 3, 1, false));
-        pieceList.add(new Pawn(this, 4, 1, false));
-        pieceList.add(new Pawn(this, 5, 1, false));
-        pieceList.add(new Pawn(this, 6, 1, false));
-        pieceList.add(new Pawn(this, 7, 1, false));
-        pieceList.add(new Rook(this, 0, 0, false));
-        pieceList.add(new Rook(this, 7, 0, false));
-        pieceList.add(new Rook(this, 0, 7, true));
-        pieceList.add(new Rook(this, 7, 7, true));
-        pieceList.add(new Bishop(this, 2, 0, false));
-        pieceList.add(new Bishop(this, 5, 0, false));
-        pieceList.add(new Bishop(this, 2, 7, true));
-        pieceList.add(new Bishop(this, 5, 7, true));
-        pieceList.add(new Queen(this, 3, 0, false));
-        pieceList.add(new Queen(this, 3, 7, true));
-        pieceList.add(new King(this, 4, 7, true));
-        pieceList.add(new King(this, 4, 0, false));
+        pieceList.add(new Knight(this, 1, 0, PieceColor.BLACK));
+        pieceList.add(new Knight(this, 6, 0, PieceColor.BLACK));
+        pieceList.add(new Knight(this, 1, 7, PieceColor.WHITE));
+        pieceList.add(new Knight(this, 6, 7, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 0, 6, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 1, 6, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 2, 6, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 3, 6, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 4, 6, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 5, 6, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 6, 6, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 7, 6, PieceColor.WHITE));
+        pieceList.add(new Pawn(this, 0, 1, PieceColor.BLACK));
+        pieceList.add(new Pawn(this, 1, 1, PieceColor.BLACK));
+        pieceList.add(new Pawn(this, 2, 1, PieceColor.BLACK));
+        pieceList.add(new Pawn(this, 3, 1, PieceColor.BLACK));
+        pieceList.add(new Pawn(this, 4, 1, PieceColor.BLACK));
+        pieceList.add(new Pawn(this, 5, 1, PieceColor.BLACK));
+        pieceList.add(new Pawn(this, 6, 1, PieceColor.BLACK));
+        pieceList.add(new Pawn(this, 7, 1, PieceColor.BLACK));
+        pieceList.add(new Rook(this, 0, 0, PieceColor.BLACK));
+        pieceList.add(new Rook(this, 7, 0, PieceColor.BLACK));
+        pieceList.add(new Rook(this, 0, 7, PieceColor.WHITE));
+        pieceList.add(new Rook(this, 7, 7, PieceColor.WHITE));
+        pieceList.add(new Bishop(this, 2, 0, PieceColor.BLACK));
+        pieceList.add(new Bishop(this, 5, 0, PieceColor.BLACK));
+        pieceList.add(new Bishop(this, 2, 7, PieceColor.WHITE));
+        pieceList.add(new Bishop(this, 5, 7, PieceColor.WHITE));
+        pieceList.add(new Queen(this, 3, 0, PieceColor.BLACK));
+        pieceList.add(new Queen(this, 3, 7, PieceColor.WHITE));
+        pieceList.add(new King(this, 4, 7, PieceColor.WHITE));
+        pieceList.add(new King(this, 4, 0, PieceColor.BLACK));
     }
 
     @Override
@@ -117,18 +117,20 @@ public class Board extends JPanel{
         Piece piece = getPiece(fromCol, fromRow);
         Piece toPiece = getPiece(toCol, toRow);
 
-        if(piece.isWhite() != whiteTurn){
+        if((piece.getColor() == PieceColor.WHITE) && (!whiteTurn)){
             return false;
         }
 
-        if(piece != null && toPiece != null){
-            if(piece.isWhite() == toPiece.isWhite()){
-                return false;
-            }
+        if((piece.getColor() == PieceColor.BLACK) && (whiteTurn)){
+            return false;
+        }
+
+        if((toPiece != null) && (piece.getColor() == toPiece.getColor())){
+            return false;
         }
 
         if(piece instanceof Pawn ){
-            if(piece.isWhite()){
+            if(piece.getColor() == PieceColor.WHITE){
                 if(!piece.readMadeMove()){
                     if((fromRow - 1 == toRow) && (fromCol + 1 == toCol || fromCol - 1 == toCol) && (toPiece != null)){
                         piece.switchMadeMove();
@@ -437,13 +439,13 @@ public class Board extends JPanel{
         instanceof Pawn && move.newRow == 7){
             pieceList.remove(move.Capture);
             pieceList.remove(move.piece);
-            pieceList.add(new Queen(this, move.newCol, move.newRow, (move.piece.isWhite() ? true : false)));
+            pieceList.add(new Queen(this, move.newCol, move.newRow, (move.piece.getColor())));
         } else{
             pieceList.remove(move.Capture);
         }
         if(move.Capture instanceof King){
             System.out.println();
-            if(move.piece.isWhite()){
+            if(move.piece.getColor() == PieceColor.WHITE){
                 System.out.println("White team wins!\n");
             }
             else{

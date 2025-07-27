@@ -18,4 +18,9 @@ public class King extends Piece{
         this.sprite = sT.getSubimage(0 * sTScale, this.color == PieceColor.WHITE ? 0 : sTScale, sTScale, sTScale).getScaledInstance(board.ts, board.ts, BufferedImage.SCALE_SMOOTH);
     }
 
+    @Override
+    public boolean isValidMove(int toCol, int toRow, Board board){
+        return false;
+    }
+
 }

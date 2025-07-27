@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 
 
 
-public class Piece {
+public abstract class Piece {
 
     public int col, row;
     public int xpos, ypos;
@@ -24,6 +24,8 @@ public class Piece {
     public boolean readMadeMove(){
         return madeMove;
     }
+
+    public abstract boolean isValidMove(int toCol, int toRow, Board board);
 
     Image sprite;
     Board board;

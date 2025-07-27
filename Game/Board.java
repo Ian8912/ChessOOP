@@ -129,52 +129,10 @@ public class Board extends JPanel{
             return false;
         }
 
-        if(piece instanceof Pawn ){
-            if(piece.getColor() == PieceColor.WHITE){
-                if(!piece.readMadeMove()){
-                    if((fromRow - 1 == toRow) && (fromCol + 1 == toCol || fromCol - 1 == toCol) && (toPiece != null)){
-                        piece.switchMadeMove();
-                        return true;
-                    }
-                    else if((fromRow - toRow < 3) && (fromRow - toRow > -1) && (toCol == fromCol) && (toPiece == null)){
-                        if(getPiece(fromCol, fromRow - 1) != null){
-                            return false;
-                        }
-                        piece.switchMadeMove();
-                        return true;
-                    }
-                }
-                else{
-                    if((fromRow - 1 == toRow) && (fromCol + 1 == toCol || fromCol - 1 == toCol) && (toPiece != null)){
-                        return true;
-                    }
-                    else if((fromRow - toRow == 1) && (toCol == fromCol) && (toPiece == null)){
-                        return true;
-                    }
-                }
-            }
-            else{
-                if(!piece.readMadeMove()){
-                    if((fromRow + 1 == toRow) && (fromCol + 1 == toCol || fromCol - 1 == toCol) && (toPiece != null)){
-                        return true;
-                    }
-                    else if((fromRow - toRow > -3) && (fromRow - toRow < 1) && (toCol == fromCol) && (toPiece == null)){
-                        piece.switchMadeMove();
-                        return true;
-                    }
-                }
-                else{
-                    if((fromRow + 1 == toRow) && (fromCol + 1 == toCol || fromCol - 1 == toCol) && (toPiece != null)){
-                        return true;
-                    }
-                    else if((fromRow - toRow > -2) && (fromRow - toRow < 1) && (toCol == fromCol) && (toPiece == null)){
-                        return true;
-                    }
-            }
-        }
-            return false;
-        }
+        return piece.isValidMove(toCol, toRow, this);
 
+        /* 
+         * 
         else if(piece instanceof Rook){
             boolean openPath = true;
             if(toRow == fromRow && fromCol < toCol){
@@ -431,7 +389,7 @@ public class Board extends JPanel{
             }
             return false;
         }
-        return true;
+        return true; */
     }
 
     public void capture(Move move){

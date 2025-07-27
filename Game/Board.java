@@ -130,32 +130,6 @@ public class Board extends JPanel{
         }
 
         return piece.isValidMove(toCol, toRow, this);
-
-        /* 
-         * 
-
-        else if (piece instanceof King) {
-            // Checks for the possible moves
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                
-                    if (i == 0 && j == 0) {
-                        continue;
-                    }
-        
-                    int newRow = fromRow + i;
-                    int newCol = fromCol + j;
-                
-                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
-                        if(newRow == toRow && newCol == toCol){
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-        return true; */
     }
 
     public void capture(Move move){

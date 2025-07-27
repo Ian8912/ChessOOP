@@ -20,6 +20,24 @@ public class King extends Piece{
 
     @Override
     public boolean isValidMove(int toCol, int toRow, Board board){
+        // Checks for the possible moves
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+            
+                if (i == 0 && j == 0) {
+                    continue;
+                }
+    
+                int newRow = this.row + i;
+                int newCol = this.col + j;
+            
+                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                    if(newRow == toRow && newCol == toCol){
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 

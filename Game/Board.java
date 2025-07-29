@@ -113,9 +113,8 @@ public class Board extends JPanel{
     }
 
     public boolean validMove(Move move){
-        int toCol = move.newCol, toRow = move.newRow, fromCol = move.piece.col, fromRow = move.piece.row;
-        Piece piece = getPiece(fromCol, fromRow);
-        Piece toPiece = getPiece(toCol, toRow);
+        Piece piece = getPiece(move.oldCol, move.oldRow);
+        Piece toPiece = getPiece(move.newCol, move.newRow);
 
         if((piece.getColor() == PieceColor.WHITE) && (!whiteTurn)){
             return false;
@@ -129,7 +128,7 @@ public class Board extends JPanel{
             return false;
         }
 
-        return piece.isValidMove(toCol, toRow, this);
+        return piece.isValidMove(move.newCol, move.newRow, this);
     }
 
     public void capture(Move move){

@@ -1,4 +1,4 @@
-import Game.Board;
+package Game;
 import java.awt.*;
 import javax.swing.*;
 

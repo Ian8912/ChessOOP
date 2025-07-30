@@ -14,6 +14,8 @@ public class GameRun {
      * Main method to launch the chess game.
      * 
      * @param args Command-line arguments (not used).
+     * @see Board
+     * @see Board#addPieces() 
      */
     public static void main(String[] args){
         System.out.println("GameRun launched");

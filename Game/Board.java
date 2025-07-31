@@ -17,23 +17,30 @@ import javax.swing.*;
  * @see Move
  * @see Input
  */
-public class Board extends JPanel{
+public class Board extends JPanel {
 
+    /** The size (in pixels) of each tile on the board.*/
     public int ts = 85;
 
-    private  final int col = 8;
+    /** The number of columns on the board (standard: 8). */
+    private final int col = 8;
+    /** The number of rows on the board (standard: 8). */
     private final int row = 8;
     
+    /** The list of all active chess pieces on the board. */
     private ArrayList<Piece> pieceList = new ArrayList<>();
     
-    public Piece selPiece; // The piece currently selected by the player
+    /** The piece currently selected by the player. */
+    public Piece selPiece;
 
-    private boolean whiteTurn = true; // True if it's white's turn
+    /** Tracks whether it is white's turn to play. */
+    private boolean whiteTurn = true; 
 
-    public Input in = new Input(this); // Handles mouse input events
+    /** Handles mouse input events and piece interaction. */
+    public Input in = new Input(this);
 
     /**
-     * Constructs the chess {@code Board} and prepares it for user interaction.
+     * Constructs the chess board and prepares it for user interaction.
      *
      * <p>Sets the board's preferred size based on the number of rows and columns,
      * then attaches mouse input listeners to handle click and drag events from the user.</p>
@@ -44,18 +51,23 @@ public class Board extends JPanel{
         this.setPreferredSize(new Dimension(col * ts , row * ts));
         this.addMouseListener(in);
         this.addMouseMotionListener(in);
-
     }
 
     /**
      * Adds all chess pieces to their standard starting positions on the board.
      * 
-     * <p>This method initializes and places all chess pieces into the internal
-     * piece list. It defines their intial row, column, and color. This 
+     * <p>This method initializes and places all chess {@link Piece} subclasses into the internal
+     * piece list. It defines their initial row, column, and color. This 
      * prepares the board for the start of the game.</p>
+     *
+     * @see Knight
+     * @see Pawn
+     * @see Rook
+     * @see Bishop
+     * @see Queen
+     * @see King
      */
-    public void addPieces()
-    {
+    public void addPieces(){
         pieceList.add(new Knight(this, 1, 0, PieceColor.BLACK));
         pieceList.add(new Knight(this, 6, 0, PieceColor.BLACK));
         pieceList.add(new Knight(this, 1, 7, PieceColor.WHITE));
@@ -100,8 +112,7 @@ public class Board extends JPanel{
      * @param g the Graphics context used for drawing
      */
     @Override
-    public void paintComponent(Graphics g)
-    {
+    public void paintComponent(Graphics g){
         Graphics2D g2 = (Graphics2D) g;
 
         for (int r = 0; r < row; r++)
@@ -120,16 +131,15 @@ public class Board extends JPanel{
     /**
      * Retrieve the chess piece located at the specified column and row.
      * 
-     * <p>This method searches through the {@link pieceList} to find a piece
+     * <p>This method searches through the {@code pieceList} to find a piece
      * that matches the given board coordinates. If no piece is found at the
      * specified location, the method returns {@code null}.</p>
      * 
      * @param col the column of the desired piece (0-7)
      * @param row the row of the desired piece (0-7)
-     * @return the chess piece at the specified location, or {@code null} if none exists
+     * @return the chess {@link Piece} at the specified location, or {@code null} if none exists
      */
-    public Piece getPiece(int col, int row)
-    {
+    public Piece getPiece(int col, int row){
         for (Piece piece : pieceList)
         {
             if (piece.col == col && piece.row == row)
@@ -145,12 +155,12 @@ public class Board extends JPanel{
      * current position ("from") and target position ("to"). If the move is
      * valid, the piece's board and screen coordinates are updated, a capture
      * is performed if necessary, and the turn is switched. If the move is
-     * invalid, the piece is visually reset to its original location.</p>
+     * invalid, the piece is reset to its original location.</p>
      *
-     * @param move contains coordinates for current piece location and destination location
+     * @param move the {@link Move} object containing coordinates for current piece location 
+     *             and destination location.
      */
-    public void makeMove(Move move)
-    {
+    public void makeMove(Move move){
         if(validMove(move)){
             if((move.piece.col != move.newCol || move.piece.row != move.newRow)){
                 move.piece.col = move.newCol;
@@ -176,9 +186,10 @@ public class Board extends JPanel{
      * <p>This method retrieves the selected piece and the target square, checking if the move
      * is allowed given the current player's turn. It returns {@code false} if the player attempts
      * to move out of turn or capture their own piece. If those conditions pass, it defers to the
-     * piece’s own {@code isValidMove()} method to validate subclass-specific movement logic.</p>
+     * piece’s own {@link Piece#isValidMove(int, int, Board)} method to validate subclass-specific movement logic.</p>
      * 
-     * @param move contains coordinates for current piece location and destination location
+     * @param move the {@link Move} object containing coordinates for current piece location 
+     *             and destination location.
      * @return {@code true} if the move is valid; {@code false} otherwise
      */
     public boolean validMove(Move move){
@@ -203,12 +214,13 @@ public class Board extends JPanel{
     /**
      * Captures an opposing piece and performs special chess logic such as promotion or game end.
      * 
-     * <p>This method checks if the move results in a capture, {@code Pawn} promotion, or game-ending
+     * <p>This method checks if the move results in a capture, pawn promotion, or game-ending
      * condition. If a {@link Pawn} reaches the opposite end of the board, it is promoted to a
      * {@link Queen}. If a {@link King} is captured, the game ends and the winning team is printed
      * to the terminal before exiting the program.</p>
      * 
-     * @param move contains coordinates for current piece location and destination location
+     * @param move the {@link Move} object containing coordinates for current piece location 
+     *             and destination location.
      */
     public void capture(Move move){
         if(move.piece instanceof Pawn && (move.newRow == 0 || move.newRow == 7)){

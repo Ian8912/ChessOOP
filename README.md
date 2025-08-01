@@ -1,7 +1,6 @@
 ## Object-Oriented Programming GUI Chess Project
 
-<strong>Developed by:</strong> <br>
-Texas State University: Ian Lingo, Pedro Perez, and Shaz Momin.
+<strong>Developed by:</strong> Ian Lingo, Pedro Perez, and Shaz Momin.
 
 #### Project Overview
 

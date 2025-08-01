@@ -1,7 +1,49 @@
-Object Oriented Programming GUI Chess Project
+## Object-Oriented Programming GUI Chess Project
 
-Created by: TXST students Ian Lingo, Pedro Perez, and Shaz Momin.
+<strong>Developed by:</strong> <br>
+Texas State University: Ian Lingo, Pedro Perez, and Shaz Momin.
 
-This project is a testament of our abilities and knowledge on Object Oriented Programming while being able to create a GUI in Java into a functional chess game from scratch. The program is split into 2 main packages "Game" and "Piece" as well as the "GameRun" class which runs the game. In order to run this project, you must have all files downloaded onto your device from our GitHub repository. Once you have done so, run the program from the GameRun.java file to pull up the chess game UI.
+#### Project Overview
 
-The chess pieces are all movable after pressing with your mouse and rotate the color pieces turn after every successful move. Once a player reaches to the other side of their opponents board, their piece will automatically promote into a Queen piece. A chess game is won after a player captures the opposing players King or vice versa and will close the program.
+This project showcases our understanding of <strong>Object-Oriented Programming (OOP)</strong> by building a fully
+functional chess game using Java with a <strong>Swing-based GUI</strong> entirely from scratch. <br>
+
+The program is organized into two primary packages: <br>
+* `Game`: Handles the game board, movement validation, input handling, and UI rendering. <br>
+* `Piece`: Contains all chess piece classes (`Pawn`, `Rook`, `Bishop`, etc.) with piece-specific logic.
+
+The entry point is the `GameRun.java` file within the `Game`  package, which initializes and launches the chess 
+game interface. <br>
+
+#### How to Run
+
+<ol>
+    <li> Clone or download all source files from this GitHub repository.</li>
+    <li> Ensure you have <strong>Java 17 or later</strong> installed</li>
+    <li> Compile all class/source files in the project from the root directory:
+    <pre> ```bash javac Game/*.java Piece/*.java``` </pre></li>
+    <li> Launch the game:
+    <pre> ```bash java Game/GameRun``` </pre></li>
+</ol>
+
+#### Game Features
+
+* Click and drag pieces using your mouse.
+* Enforces turn order (White and Black alternate each move).
+* Implements <strong>Pawn Promotion:</strong> a pawn that reaches the opponent's back rank is 
+    automatically promoted to a <strong>Queen</strong>.
+* A player <strong>wins</strong> by capturing the opposing <strong>King</strong>, after which the 
+    program closes automatically.
+* Visual board and sprite rendering is done via Java's `Graphics2D` and `BufferedImage`.
+
+#### Project Significance
+
+This project represents our first collaborative software effort involving: <br>
+
+<ul>
+    <li> Practical use of object-oriented principles (abstraction, polymorphism, inheritance, encapsulation</li>
+    <li> GUI development using Java Swing</li>
+    <li> Team collaboration, version control, and file organization</li>
+</ul>
+
+Thank you for checking out the project.

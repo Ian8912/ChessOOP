@@ -22,11 +22,20 @@ public class GameRun {
 
         JFrame frame = new JFrame("Chess");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(new GridBagLayout());
+        frame.setLayout(new BorderLayout());
         
         Board board = new Board();
         board.addPieces();
-        frame.add(board);
+
+        JTextArea infoArea = new JTextArea(5, 23);
+        infoArea.setEditable(false);
+        infoArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        infoArea.setText(" Welcome to Java Chess!\n White's turn");
+        JScrollPane scrollPane = new JScrollPane(infoArea);
+
+        frame.add(board, BorderLayout.CENTER);
+        frame.add(scrollPane, BorderLayout.EAST);
+
         frame.pack();
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);

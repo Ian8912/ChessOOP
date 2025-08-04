@@ -23,12 +23,13 @@ public class GameRun {
         JFrame frame = new JFrame("Chess");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new GridBagLayout());
-        frame.setSize(new Dimension(696, 719));
-        frame.setLocationRelativeTo(null);
         
         Board board = new Board();
         board.addPieces();
         frame.add(board);
+        frame.pack();
+        frame.setResizable(false);
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 }

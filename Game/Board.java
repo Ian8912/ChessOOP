@@ -34,7 +34,9 @@ public class Board extends JPanel {
     public Piece selPiece;
 
     /** Tracks whether it is white's turn to play. */
-    private boolean whiteTurn = true; 
+    private boolean whiteTurn = true;
+
+    private JTextArea infoArea;
 
     /** Handles mouse input events and piece interaction. */
     public Input in = new Input(this);
@@ -100,6 +102,10 @@ public class Board extends JPanel {
         pieceList.add(new Queen(this, 3, 7, PieceColor.WHITE));
         pieceList.add(new King(this, 4, 7, PieceColor.WHITE));
         pieceList.add(new King(this, 4, 0, PieceColor.BLACK));
+    }
+
+    public void setInfoArea(JTextArea infoArea){
+        this.infoArea = infoArea;
     }
 
     /**
@@ -170,7 +176,15 @@ public class Board extends JPanel {
                 move.piece.ypos = move.newRow * ts;
         
                 capture(move);
+
                 whiteTurn = !whiteTurn;
+
+                if(whiteTurn){
+                    infoArea.setText("It is White's Turn");
+                }
+                else{
+                    infoArea.setText("It is Black's Turn");
+                }
 
             }
         }

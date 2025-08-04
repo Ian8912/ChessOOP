@@ -30,8 +30,10 @@ public class GameRun {
         JTextArea infoArea = new JTextArea(5, 23);
         infoArea.setEditable(false);
         infoArea.setFont(new Font("Monospaced", Font.BOLD, 14));
-        infoArea.setText(" Welcome to Java Chess\n\n White's turn");
+        infoArea.setText(" Welcome to Java Chess\n\n It is White's turn");
         JScrollPane scrollPane = new JScrollPane(infoArea);
+
+        board.setInfoArea(infoArea);
 
         frame.add(board, BorderLayout.CENTER);
         frame.add(scrollPane, BorderLayout.EAST);

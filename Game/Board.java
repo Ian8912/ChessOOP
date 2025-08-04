@@ -34,7 +34,10 @@ public class Board extends JPanel {
     public Piece selPiece;
 
     /** Tracks whether it is white's turn to play. */
-    private boolean whiteTurn = true; 
+    private boolean whiteTurn = true;
+
+    /** The JTextArea component used to display information associated with the board.*/
+    private JTextArea infoArea;
 
     /** Handles mouse input events and piece interaction. */
     public Input in = new Input(this);
@@ -103,6 +106,18 @@ public class Board extends JPanel {
     }
 
     /**
+     * Connects the chess board with the specified JTextArea.
+     *
+     * <p>This method associates the given {@link JTextArea} to this {@link Board}, so
+     * it can be used to display game information or updates.</p>
+     *
+     * @param infoArea the {@link JTextArea} info area
+     */
+    public void setInfoArea(JTextArea infoArea){
+        this.infoArea = infoArea;
+    }
+
+    /**
      * Renders the chess board and all active pieces.
      * 
      * <p>This method paints the checkered background of the 8x8 board
@@ -154,7 +169,7 @@ public class Board extends JPanel {
      * <p>This method receives a {@link Move} object containing the piece's
      * current position ("from") and target position ("to"). If the move is
      * valid, the piece's board and screen coordinates are updated, a capture
-     * is performed if necessary, and the turn is switched. If the move is
+     * is performed if necessary, the turn is switched, and the {@code infoArea} is updated. If the move is
      * invalid, the piece is reset to its original location.</p>
      *
      * @param move the {@link Move} object containing coordinates for current piece location 
@@ -170,7 +185,15 @@ public class Board extends JPanel {
                 move.piece.ypos = move.newRow * ts;
         
                 capture(move);
+
                 whiteTurn = !whiteTurn;
+
+                if(whiteTurn){
+                    infoArea.setText("It is White's Turn");
+                }
+                else{
+                    infoArea.setText("It is Black's Turn");
+                }
 
             }
         }

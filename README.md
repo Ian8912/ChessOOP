@@ -1,8 +1,8 @@
-## Object-Oriented Programming GUI Chess Project
+# Object-Oriented Programming GUI Chess Project
 
 <strong>Developed by:</strong> Ian Lingo, Pedro Perez, and Shaz Momin.
 
-#### Project Overview
+## Project Overview
 
 This project showcases our understanding of <strong>Object-Oriented Programming (OOP)</strong> by building a fully
 functional chess game using Java with a <strong>Swing-based GUI</strong> entirely from scratch. <br>
@@ -14,11 +14,11 @@ The program is organized into two primary packages: <br>
 The entry point is the `GameRun.java` file within the `Game`  package, which initializes and launches the chess 
 game interface. <br>
 
-#### View Full JavaDocs Online:
+### View Full JavaDocs Online:
 
 [Click here to open the JavaDocs](https://ian8912.github.io/ChessOOP/)
 
-#### How to Run
+### How to Run
 
 <ol>
     <li> Clone or download all source files from this GitHub repository.</li>
@@ -29,7 +29,7 @@ game interface. <br>
     <pre> ```bash java Game/GameRun``` </pre></li>
 </ol>
 
-#### Game Features
+### Game Features
 
 * Click and drag pieces using your mouse.
 * Enforces turn order (White and Black alternate each move).
@@ -39,11 +39,7 @@ game interface. <br>
     program closes automatically.
 * Visual board and sprite rendering is done via Java's `Graphics2D` and `BufferedImage`.
 
-#### View Full JavaDocs Online
-
-[Click here to open the docs](https://ian8912.github.io/ChessOOP/)
-
-#### Project Significance
+### Project Significance
 
 This project represents our first collaborative software effort involving: <br>
 
@@ -53,4 +49,4 @@ This project represents our first collaborative software effort involving: <br>
     <li> Team collaboration, version control, and file organization</li>
 </ul>
 
-Thank you for checking out the project.
+Thank you for checking out this project!

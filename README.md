@@ -14,6 +14,10 @@ The program is organized into two primary packages: <br>
 The entry point is the `GameRun.java` file within the `Game`  package, which initializes and launches the chess 
 game interface. <br>
 
+#### View Full JavaDocs Online:
+
+[Click here to open the JavaDocs](https://ian8912.github.io/ChessOOP/)
+
 #### How to Run
 
 <ol>
@@ -34,6 +38,10 @@ game interface. <br>
 * A player <strong>wins</strong> by capturing the opposing <strong>King</strong>, after which the 
     program closes automatically.
 * Visual board and sprite rendering is done via Java's `Graphics2D` and `BufferedImage`.
+
+#### View Full JavaDocs Online
+
+[Click here to open the docs](https://ian8912.github.io/ChessOOP/)
 
 #### Project Significance
 

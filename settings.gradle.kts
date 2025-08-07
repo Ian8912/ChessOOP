@@ -12,4 +12,3 @@ plugins {
 }
 
 rootProject.name = "ChessOOP"
-include("app")

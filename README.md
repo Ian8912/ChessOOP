@@ -29,7 +29,7 @@ game interface. <br>
 #### On macOS/Linux:
 <pre> ./gradlew run </pre>
 #### On Windows:
-<pre> gradlew.bat run </pre>
+<pre> ./gradlew.bat run </pre>
 
 ### Game Features
 

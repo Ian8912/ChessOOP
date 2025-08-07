@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import java.io.InputStream;
+import java.io.FileNotFoundException;
 
 /**
  * Represents an abstract chess piece, providing shared functionality for all specific piece types.
@@ -42,13 +44,18 @@ public abstract class Piece {
     /** The full sprite sheet image containing all chess piece graphics. */
     BufferedImage sT;
 
-    /** The width and height of a single piece graphic within the sprite sheet. */
-    public int sTScale = sT.getWidth() / 6;
+    /** The single piece graphic within the sprite sheet. */
+    public int sTScale;
 
     /** Initializes the sprite sheet when the piece is constructed. */
     {
-        try {
-            sT = ImageIO.read(ClassLoader.getSystemResourceAsStream("Pieces.png"));
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("Pieces.png")) {
+            if (is == null) {
+                throw new FileNotFoundException("Pieces.png not found on classpath!");
+            }
+            sT = ImageIO.read(is);
+            /** The width and height of a single piece graphic within the sprite sheet. */
+            sTScale = sT.getWidth() / 6;
         } catch (IOException e) {
             e.printStackTrace();
         }

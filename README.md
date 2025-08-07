@@ -23,11 +23,13 @@ game interface. <br>
 <ol>
     <li> Clone or download all source files from this GitHub repository.</li>
     <li> Ensure you have <strong>Java 17 or later</strong> installed</li>
-    <li> Compile all class/source files in the project from the root directory:
-    <pre> ```bash javac Game/*.java Piece/*.java``` </pre></li>
-    <li> Launch the game:
-    <pre> ```bash java Game/GameRun``` </pre></li>
+    <li> Run the game from the root directory using Gradle:</li>
 </ol>
+
+#### On macOS/Linux:
+<pre> ./gradlew run </pre>
+#### On Windows:
+<pre> gradlew.bat run </pre>
 
 ### Game Features
 

@@ -5,6 +5,6 @@
 build/
 
 # Ignore IDE (IntelliJ IDEA) project files
-,idea/
+.idea/
 *.iml
 out/

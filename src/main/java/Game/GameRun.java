@@ -18,6 +18,7 @@ public class GameRun {
      * @see Board#addPieces() 
      */
     public static void main(String[] args){
+
         System.out.println("GameRun launched");
 
         JFrame frame = new JFrame("Chess");
@@ -43,4 +44,5 @@ public class GameRun {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
+
 }

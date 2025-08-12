@@ -51,6 +51,7 @@ public class Board extends JPanel {
      * @see Input for mouse handling logic
      */
     public Board(){
+
         this.setPreferredSize(new Dimension(col * ts , row * ts));
         this.addMouseListener(in);
         this.addMouseMotionListener(in);
@@ -71,6 +72,7 @@ public class Board extends JPanel {
      * @see King
      */
     public void addPieces(){
+
         pieceList.add(new Knight(this, 1, 0, PieceColor.BLACK));
         pieceList.add(new Knight(this, 6, 0, PieceColor.BLACK));
         pieceList.add(new Knight(this, 1, 7, PieceColor.WHITE));
@@ -114,6 +116,7 @@ public class Board extends JPanel {
      * @param infoArea the {@link JTextArea} info area
      */
     public void setInfoArea(JTextArea infoArea){
+
         this.infoArea = infoArea;
     }
 
@@ -128,17 +131,17 @@ public class Board extends JPanel {
      */
     @Override
     public void paintComponent(Graphics g){
+
         Graphics2D g2 = (Graphics2D) g;
 
-        for (int r = 0; r < row; r++)
-            for (int c = 0; c < col; c++)
-            {
+        for (int r = 0; r < row; r++){
+            for (int c = 0; c < col; c++){
                 g2.setColor((c+r) % 2 == 0 ? new Color(255, 255, 255) : new Color(122, 173, 107) );
                 g2.fillRect(r* ts, c*ts, ts, ts);
             }
-        
-        for (Piece piece : pieceList)
-        {
+        }
+
+        for (Piece piece : pieceList){
             piece.paint(g2);
         }
     }
@@ -155,10 +158,11 @@ public class Board extends JPanel {
      * @return the chess {@link Piece} at the specified location, or {@code null} if none exists
      */
     public Piece getPiece(int col, int row){
-        for (Piece piece : pieceList)
-        {
-            if (piece.col == col && piece.row == row)
+
+        for (Piece piece : pieceList){
+            if (piece.col == col && piece.row == row){
                 return piece;
+            }
         }
         return null;
     }
@@ -176,6 +180,7 @@ public class Board extends JPanel {
      *             and destination location.
      */
     public void makeMove(Move move){
+
         if(validMove(move)){
             if((move.piece.col != move.newCol || move.piece.row != move.newRow)){
                 move.piece.col = move.newCol;
@@ -194,7 +199,6 @@ public class Board extends JPanel {
                 else{
                     infoArea.setText("It is Black's Turn");
                 }
-
             }
         }
         else{
@@ -216,6 +220,7 @@ public class Board extends JPanel {
      * @return {@code true} if the move is valid; {@code false} otherwise
      */
     public boolean validMove(Move move){
+
         Piece piece = getPiece(move.oldCol, move.oldRow);
         Piece toPiece = getPiece(move.newCol, move.newRow);
 
@@ -246,13 +251,16 @@ public class Board extends JPanel {
      *             and destination location.
      */
     public void capture(Move move){
+
         if(move.piece instanceof Pawn && (move.newRow == 0 || move.newRow == 7)){
             pieceList.remove(move.Capture);
             pieceList.remove(move.piece);
             pieceList.add(new Queen(this, move.newCol, move.newRow, (move.piece.getColor())));
-        } else{
+        }
+        else{
             pieceList.remove(move.Capture);
         }
+
         if(move.Capture instanceof King){
             System.out.println();
             if(move.piece.getColor() == PieceColor.WHITE){

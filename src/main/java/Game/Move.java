@@ -43,6 +43,7 @@ public class Move {
      * @param newRow the destination row
      */
      public Move(Board board, Piece piece, int newCol, int newRow){
+
         this.oldCol = piece.col;
         this.oldRow = piece.row;
         this.newCol = newCol;
@@ -51,4 +52,5 @@ public class Move {
         this.piece = piece;
         this.Capture = board.getPiece(newCol, newRow);
      }
+
 }

@@ -71,6 +71,7 @@ public class Knight extends Piece {
      */
     @Override
     public boolean isValidMove(int toCol, int toRow, Board board){
+
         int[] rowOffsets = {-2, -1, 1, 2, 2, 1, -1, -2};
         int[] colOffsets = {1, 2, 2, 1, -1, -2, -2, -1};
 
@@ -86,4 +87,5 @@ public class Knight extends Piece {
         }
         return false;
     }
+
 }

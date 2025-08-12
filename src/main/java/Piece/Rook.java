@@ -65,6 +65,7 @@ public class Rook extends Piece {
      */
     @Override
     public boolean isValidMove(int toCol, int toRow, Board board){
+
         boolean openPath = true;
         // Checks for Rightward Moves
         if(toRow == this.row && this.col < toCol){
@@ -74,6 +75,7 @@ public class Rook extends Piece {
                 }
             }
         }
+
         // Checks for Leftward Moves
         if(toRow == this.row  && this.col > toCol){
             for(int i = this.col - 1; i > toCol; i--){
@@ -82,6 +84,7 @@ public class Rook extends Piece {
                 }
             }
         }
+
         // Checks for Upward Moves
         if(toRow < this.row  && this.col == toCol){
             for(int i = this.row  - 1; i > toRow; i--){
@@ -90,6 +93,7 @@ public class Rook extends Piece {
                 }
             }
         }
+
         // Checks for Downward Moves
         if(toRow > this.row  && this.col == toCol){
             for(int i = this.row  + 1; i < toRow; i++){
@@ -98,10 +102,12 @@ public class Rook extends Piece {
                 }
             }
         }
+
         // Checks for unobstructed path, then moves
         if((((this.row  == toRow) && (this.col != toCol)) || ((this.row  != toRow) && (this.col == toCol)))  && (openPath)){
             return true;
         }
         return false;
     }
+
 }

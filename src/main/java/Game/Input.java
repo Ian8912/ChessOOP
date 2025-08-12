@@ -25,6 +25,7 @@ public class Input extends MouseAdapter {
      * @param board the chess board this input will handle
      */
     public Input(Board board){
+
         this.board = board;
     }
 
@@ -39,15 +40,14 @@ public class Input extends MouseAdapter {
      * @param e the mouse event triggered by the user click action
      */
     @Override
-    public void mousePressed(MouseEvent e)
-    {
+    public void mousePressed(MouseEvent e){
+
         int col = e.getX() / board.ts;
         int row = e.getY() / board.ts;
 
         Piece pXY = board.getPiece(col, row);
 
-        if (pXY != null)
-        {
+        if (pXY != null){
             board.selPiece = pXY;
         }
     }
@@ -101,4 +101,5 @@ public class Input extends MouseAdapter {
             board.repaint();
         }
     }
+
 }

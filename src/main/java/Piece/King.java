@@ -69,6 +69,7 @@ public class King extends Piece {
      */
     @Override
     public boolean isValidMove(int toCol, int toRow, Board board){
+
         // Checks for the possible moves
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
@@ -89,4 +90,5 @@ public class King extends Piece {
         }
         return false;
     }
+
 }

@@ -66,7 +66,8 @@ public abstract class Piece {
      *
      * @param board the chess board this piece belongs to
      */
-    public Piece(Board board) {
+    public Piece(Board board){
+
         this.board = board;
     }
 
@@ -75,7 +76,8 @@ public abstract class Piece {
      *
      * @param g2 the graphics context used to render the piece
      */
-    public void paint(Graphics2D g2) {
+    public void paint(Graphics2D g2){
+
         g2.drawImage(sprite, xpos, ypos, null);
     }
 
@@ -84,14 +86,16 @@ public abstract class Piece {
      *
      * @return the color of this piece
      */
-    public PieceColor getColor() {
+    public PieceColor getColor(){
+
         return color;
     }
 
     /**
      * Sets the madeMove flag to true, indicating the piece has moved at least once.
      */
-    public void switchMadeMove() {
+    public void switchMadeMove(){
+
         madeMove = true;
     }
 
@@ -100,7 +104,8 @@ public abstract class Piece {
      *
      * @return {@code true} if the piece has moved; {@code false} otherwise
      */
-    public boolean readMadeMove() {
+    public boolean readMadeMove(){
+
         return madeMove;
     }
 
@@ -116,4 +121,5 @@ public abstract class Piece {
      * @return {@code true} if the move is valid; {@code false} otherwise
      */
     public abstract boolean isValidMove(int toCol, int toRow, Board board);
+
 }

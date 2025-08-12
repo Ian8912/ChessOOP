@@ -70,7 +70,8 @@ public class Pawn extends Piece {
      * @return {@code true} if the move is valid; {@code false} otherwise
      */
     @Override
-    public boolean isValidMove(int toCol, int toRow, Board board) {
+    public boolean isValidMove(int toCol, int toRow, Board board){
+
         Piece toPiece = board.getPiece(toCol, toRow);
 
         // Checks white pawn piece, then moves upwards
@@ -97,6 +98,7 @@ public class Pawn extends Piece {
                 }
             }
         }
+
         // Checks black pawn piece, then moves downwards
         else{
             if(!this.readMadeMove()){
@@ -115,8 +117,9 @@ public class Pawn extends Piece {
                 else if((this.row - toRow > -2) && (this.row - toRow < 1) && (toCol == this.col) && (toPiece == null)){
                     return true;
                 }
+            }
         }
-    }
         return false;
     }
+
 }

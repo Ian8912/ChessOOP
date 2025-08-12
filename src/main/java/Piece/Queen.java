@@ -65,6 +65,7 @@ public class Queen extends Piece {
      */
     @Override
     public boolean isValidMove(int toCol, int toRow, Board board){
+
         if((this.row != toRow && this.col == toCol) || 
         (this.row == toRow && this.col != toCol)){
 
@@ -82,6 +83,7 @@ public class Queen extends Piece {
                     return true;
                 }
             }
+
             // Checks for Downward Moves
             for (int i = 1; this.row + i < 8; i++) {
                 if(board.getPiece(this.col, this.row+i) != null && 
@@ -96,6 +98,7 @@ public class Queen extends Piece {
                     return true;
                 }
             }
+
             // Checks for Rightward Moves
             for (int i = 1; this.col + i < 8; i++) {
                 if(board.getPiece(this.col+i, this.row) != null && 
@@ -110,6 +113,7 @@ public class Queen extends Piece {
                     return true;
                 }
             }
+
             // Checks for Leftward Moves
             for (int i = 1; this.col - i > -1; i++) {
                 if(board.getPiece(this.col-i, this.row) != null && 
@@ -140,6 +144,7 @@ public class Queen extends Piece {
                     return true;
                 }
             }
+
             // Checks for diagonal moves, up and to the left
             for (int i = 1; this.row - i > -1 && this.col - i > -1; i++) {
                 if(board.getPiece(this.col-i, this.row-i) != null && 
@@ -154,6 +159,7 @@ public class Queen extends Piece {
                     return true;
                 }
             }
+
             // Checks for diagonal moves, down and to the right
             for (int i = 1; this.row + i < 8 && this.col + i < 8; i++) {
                 if(board.getPiece(this.col+i, this.row+i) != null && 
@@ -168,6 +174,7 @@ public class Queen extends Piece {
                     return true;
                 }
             }
+
             // Checks for diagonal moves, down and to the left
             for (int i = 1; this.row + i < 8 && this.col - i < 8; i++) {
                 if(board.getPiece(this.col-i, this.row+i) != null && 
@@ -185,4 +192,5 @@ public class Queen extends Piece {
         }   
         return false;
     }
+
 }

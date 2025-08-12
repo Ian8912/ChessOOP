@@ -14,4 +14,5 @@ public enum PieceColor {
 
     /** The black color used for the opposing side's pieces. */
     BLACK
+
 }

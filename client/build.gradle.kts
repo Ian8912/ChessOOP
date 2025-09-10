@@ -18,17 +18,16 @@ repositories {
 
 dependencies {
     // This dependency is used by the application.
-    implementation(libs.guava)
+    //implementation(libs.guava)
+
+    // HTTP client to talk to the Spring Boot server:
+    // implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 }
 
-testing {
-    suites {
-        // Configure the built-in test suite
-        val test by getting(JvmTestSuite::class) {
-            // Use JUnit Jupiter test framework
-            useJUnitJupiter("5.12.1")
-        }
-    }
+tasks.tests {
+    useJUnitPlatform()
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

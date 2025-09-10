@@ -12,3 +12,4 @@ plugins {
 }
 
 rootProject.name = "ChessOOP"
+include("client", "server")

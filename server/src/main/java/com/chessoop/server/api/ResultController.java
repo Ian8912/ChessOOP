@@ -18,6 +18,7 @@ public class ResultController {
 
     @PostMapping("/results")
     public RecordResultResponse record(@RequestBody @Valid RecordResultRequest req){
+        System.out.println("REQ: " + req);
         var saved = svc.record(req);
 
         return new RecordResultResponse(saved.getId());

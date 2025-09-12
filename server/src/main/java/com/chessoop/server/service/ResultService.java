@@ -23,15 +23,19 @@ public class ResultService {
 
     @Transactional
     public GameResult record(RecordResultRequest req){
+        System.out.println("== RECORD REQUEST ==");
+        System.out.println("white=" + req.whiteName() + " black=" + req.blackName() + " winner=" + req.winner());
+
         Player white = upsert(req.whiteName());
         Player black = upsert(req.blackName());
 
         applyOutcomeAndElo(white, black, req.winner());
 
-        GameResult saved = results.save(new GameResult(white, black, req.winner(), req.pgn(), req.finishedAt()));
-
         players.save(white);
         players.save(black);
+
+        GameResult saved = results.save(new GameResult(white, black, req.winner(), req.pgn(), req.finishedAt()));
+
 
         return saved;
     }

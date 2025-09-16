@@ -16,38 +16,47 @@ public class Player {
     protected Player() {}
 
     public Player(String name){
+
         this.name = name.toLowerCase().trim();
     }
 
     public UUID getId(){
+
         return id;
     }
 
     public String getName(){
+
         return name;
     }
 
     public int getElo(){
+
         return elo;
     }
 
     public int getWins(){
+
         return wins;
     }
 
     public int getLosses(){
+
         return losses;
     }
 
     public void setElo(int elo){
+
         this.elo = elo;
     }
 
     public void incWins(){
+
         wins++;
     }
 
     public void incLosses(){
+
         losses++;
     }
 

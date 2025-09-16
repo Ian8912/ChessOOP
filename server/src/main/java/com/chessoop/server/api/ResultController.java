@@ -13,11 +13,13 @@ public class ResultController {
     private final ResultService svc;
 
     public ResultController(ResultService svc){
+
         this.svc = svc;
     }
 
     @PostMapping("/results")
     public RecordResultResponse record(@RequestBody @Valid RecordResultRequest req){
+
         System.out.println("REQ: " + req);
         var saved = svc.record(req);
 
@@ -26,6 +28,7 @@ public class ResultController {
 
     @GetMapping("/leaderboard")
     public List<LeaderboardRow> leaderboard(@RequestParam(defaultValue="10") int limit){
+
         return svc.leaderboard(limit);
     }
 

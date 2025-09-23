@@ -1,0 +1,44 @@
+name: Java CI (Gradle, multi-module)
+
+on:
+  push:
+    branches: [ main, develop, feat/**, fix/**, chore/**,
+                docs/**, refactor/**, ci/**, cd/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '24'
+          cache: gradle
+
+      - name: Verify Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+        continue-on-error: true
+
+      - name: Make Gradle executable (Linux/mac)
+        run: chmod +x gradlew
+
+      - name: Build & test all modules
+        run: ./gradlew clean build --stacktrace
+
+      # Upload test reports if build fails
+      - name: Upload test reports (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/test-results/test/**
+            **/build/reports/tests/**
+

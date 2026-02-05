@@ -8,3 +8,7 @@ build/
 .idea/
 *.iml
 out/
+
+# Ignore VS Code configuration files
+.vscode/
+client/bin/

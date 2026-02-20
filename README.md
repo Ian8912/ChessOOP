@@ -80,11 +80,10 @@ gradlew.bat :client:run </pre>
 #### Run Server (REST API):
 
 <pre># On macOS/Linux
-./gradlew :client:bootRun
+./gradlew :server:bootRun
 
 # On Windows
-gradlew.bat :client:bootRun </pre>
-
+gradlew.bat :server:bootRun </pre>
 Once running:
 
 - Visit H2 console -> `http://localhost:8080/h2-console`

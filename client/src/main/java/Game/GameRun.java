@@ -21,12 +21,19 @@ public class GameRun {
 
         System.out.println("GameRun launched");
 
+        String whiteName = JOptionPane.showInputDialog(null, "Enter White player's name:", "Player Setup", JOptionPane.PLAIN_MESSAGE);
+        if (whiteName == null || whiteName.isBlank()) whiteName = "White";
+
+        String blackName = JOptionPane.showInputDialog(null, "Enter Black player's name:", "Player Setup", JOptionPane.PLAIN_MESSAGE);
+        if (blackName == null || blackName.isBlank()) blackName = "Black";
+
         JFrame frame = new JFrame("Chess");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
-        
+
         Board board = new Board();
         board.addPieces();
+        board.setPlayerNames(whiteName, blackName);
 
         JTextArea infoArea = new JTextArea(5, 23);
         infoArea.setEditable(false);

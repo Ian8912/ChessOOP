@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chessdb
+      POSTGRES_USER: chess
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"   # if 5432 is busy, change to "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

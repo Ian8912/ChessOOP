@@ -39,6 +39,10 @@ public class Board extends JPanel {
     /** The JTextArea component used to display information associated with the board.*/
     private JTextArea infoArea;
 
+    /** Names of the two players, set before the game starts. */
+    private String whiteName = "White";
+    private String blackName = "Black";
+
     /** Handles mouse input events and piece interaction. */
     public Input in = new Input(this);
 
@@ -118,6 +122,17 @@ public class Board extends JPanel {
     public void setInfoArea(JTextArea infoArea){
 
         this.infoArea = infoArea;
+    }
+
+    /**
+     * Sets the display names for both players.
+     *
+     * @param whiteName name of the white player
+     * @param blackName name of the black player
+     */
+    public void setPlayerNames(String whiteName, String blackName) {
+        this.whiteName = whiteName;
+        this.blackName = blackName;
     }
 
     /**
@@ -262,13 +277,18 @@ public class Board extends JPanel {
         }
 
         if(move.Capture instanceof King){
-            System.out.println();
+            String winner;
+            String message;
             if(move.piece.getColor() == PieceColor.WHITE){
-                System.out.println("White team wins!\n");
+                winner = "WHITE";
+                message = whiteName + " (White) wins!";
             }
             else{
-                System.out.println("Black team wins!\n");
+                winner = "BLACK";
+                message = blackName + " (Black) wins!";
             }
+            ServerClient.postResult(whiteName, blackName, winner);
+            JOptionPane.showMessageDialog(this, message, "Game Over", JOptionPane.INFORMATION_MESSAGE);
             System.exit(0);
         }
     }

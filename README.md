@@ -18,6 +18,7 @@ Originally built as a collaborative class project, I (Ian Lingo) have since take
 - Implementing a Spring Boot backend for leaderboards and results.
 - Designing REST APIs and integrating Elo rating updates.
 - Adding PostgreSQL support with Docker Compose for persistent storage.
+- Integrating the Swing client with the Spring Boot server to automatically POST game results upon completion of game.
 
 ## Modules
 
@@ -39,8 +40,8 @@ game interface. <br>
 - Enforces turn order (White and Black alternate each move).
 - Implements Pawn Promotion: a pawn that reaches the opponent's back rank is
   automatically promoted to a Queen.
-- A player wins by capturing the opposing King, after which the
-  program closes automatically.
+- A player wins by capturing the opposing King; a win dialog is displayed and the result is automatically sent to the server.
+- Prompts both players for their names before the game starts.
 - Visual board and sprite rendering is done via Java's `Graphics2D` and `BufferedImage`.
 
 ### Server (Spring Boot)
@@ -52,6 +53,7 @@ game interface. <br>
 - Elo reating system with wins/losses tracked.
 - In-memory H2 database for development console available at: [http//localhost:8080/h2-console](http//localhost:8080/h2-console)
 - PostgreSQL for production via Docker Compose (`docker compose up -d`)
+- Game results are automatically received from the Swing client upon game completion. 
 
 ## How to Run
 

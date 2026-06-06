@@ -70,14 +70,8 @@ public class Input extends MouseAdapter {
 
         if (board.selPiece != null){
             Move m = new Move(board, board.selPiece, col, row);
-                if (board.isValid()){
-                    board.makeMove(m);
-                }
-                else{
-                board.selPiece.xpos = board.selPiece.col * board.ts;
-                board.selPiece.ypos = board.selPiece.row * board.ts;
-                }
-                board.repaint();
+            board.makeMove(m);
+            board.repaint();
         }
         board.selPiece = null;
     }

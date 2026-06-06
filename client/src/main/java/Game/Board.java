@@ -4,10 +4,13 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
 import Piece.Bishop;
 import Piece.King;
@@ -59,6 +62,9 @@ public class Board extends JPanel {
 
     /** Handles mouse input events and piece interaction. */
     public Input in = new Input(this);
+
+    /** The computer player, or {@code null} when playing human vs human. */
+    private ComputerPlayer computerPlayer = null;
 
     /**
      * Constructs the chess board and prepares it for user interaction.
@@ -147,6 +153,33 @@ public class Board extends JPanel {
     public void setPlayerNames(String whiteName, String blackName) {
         this.whiteName = whiteName;
         this.blackName = blackName;
+    }
+
+    /**
+     * Returns an unmodifiable view of the active piece list.
+     *
+     * @return read-only list of all pieces currently on the board
+     */
+    public List<Piece> getPieceList() {
+        return Collections.unmodifiableList(pieceList);
+    }
+
+    /**
+     * Sets the computer player. Pass {@code null} to disable computer play.
+     *
+     * @param cp the {@link ComputerPlayer} to use, or {@code null} for human vs human
+     */
+    public void setComputerPlayer(ComputerPlayer cp) {
+        this.computerPlayer = cp;
+    }
+
+    /**
+     * Returns the computer player, or {@code null} if not set.
+     *
+     * @return the active {@link ComputerPlayer}, or {@code null}
+     */
+    public ComputerPlayer getComputerPlayer() {
+        return computerPlayer;
     }
 
     /**
@@ -247,6 +280,20 @@ public class Board extends JPanel {
                 }
                 else{
                     infoArea.setText(" It is " + nextName + "'s turn");
+                }
+
+                // Trigger AI move if it is now the computer's turn
+                if (computerPlayer != null) {
+                    boolean aiTurn = (computerPlayer.getColor() == PieceColor.WHITE) == whiteTurn;
+                    if (aiTurn) {
+                        SwingUtilities.invokeLater(() -> {
+                            Move aiMove = computerPlayer.getBestMove(this);
+                            if (aiMove != null) {
+                                makeMove(aiMove);
+                                repaint();
+                            }
+                        });
+                    }
                 }
             }
         }

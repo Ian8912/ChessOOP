@@ -1,6 +1,7 @@
 package Piece;
-import Game.Board;
 import java.awt.image.BufferedImage;
+
+import Game.Board;
 
 /**
  * Represents a Knight chess piece with movement logic in an "L" shape directed on the

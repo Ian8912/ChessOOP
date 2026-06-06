@@ -1,8 +1,22 @@
 package Game;
-import Piece.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.util.ArrayList;
-import javax.swing.*;
+
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+
+import Piece.Bishop;
+import Piece.King;
+import Piece.Knight;
+import Piece.Pawn;
+import Piece.Piece;
+import Piece.PieceColor;
+import Piece.Queen;
+import Piece.Rook;
 
 /**
  * Manages the chess board, including piece placement, captures, movement
@@ -200,19 +214,39 @@ public class Board extends JPanel {
             if((move.piece.col != move.newCol || move.piece.row != move.newRow)){
                 move.piece.col = move.newCol;
                 move.piece.row = move.newRow;
-       
+
                 move.piece.xpos = move.newCol * ts;
                 move.piece.ypos = move.newRow * ts;
-        
+
                 capture(move);
 
                 whiteTurn = !whiteTurn;
 
-                if(whiteTurn){
-                    infoArea.setText("It is White's Turn");
+                PieceColor nextColor = whiteTurn ? PieceColor.WHITE : PieceColor.BLACK;
+                String nextName = whiteTurn ? whiteName : blackName;
+
+                if(!hasLegalMoves(nextColor)){
+                    if(isKingInCheck(nextColor)){
+                        String winner = whiteTurn ? "BLACK" : "WHITE";
+                        String winnerName = whiteTurn ? blackName : whiteName;
+                        ServerClient.postResult(whiteName, blackName, winner);
+                        JOptionPane.showMessageDialog(this,
+                            winnerName + " wins by checkmate!", "Checkmate",
+                            JOptionPane.INFORMATION_MESSAGE);
+                        System.exit(0);
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(this,
+                            "Stalemate — it's a draw!", "Stalemate",
+                            JOptionPane.INFORMATION_MESSAGE);
+                        System.exit(0);
+                    }
+                }
+                else if(isKingInCheck(nextColor)){
+                    infoArea.setText(" " + nextName + " is in CHECK!\n\n It is " + nextName + "'s turn");
                 }
                 else{
-                    infoArea.setText("It is Black's Turn");
+                    infoArea.setText(" It is " + nextName + "'s turn");
                 }
             }
         }
@@ -251,7 +285,23 @@ public class Board extends JPanel {
             return false;
         }
 
-        return piece.isValidMove(move.newCol, move.newRow, this);
+        if(!piece.isValidMove(move.newCol, move.newRow, this)){
+            return false;
+        }
+
+        // Simulate the move to verify it doesn't leave the king in check
+        piece.col = move.newCol;
+        piece.row = move.newRow;
+        pieceList.remove(move.Capture);
+
+        boolean leavesKingInCheck = isKingInCheck(piece.getColor());
+
+        // Undo simulation
+        piece.col = move.oldCol;
+        piece.row = move.oldRow;
+        if(move.Capture != null) pieceList.add(move.Capture);
+
+        return !leavesKingInCheck;
     }
 
     /**
@@ -275,22 +325,51 @@ public class Board extends JPanel {
         else{
             pieceList.remove(move.Capture);
         }
+    }
 
-        if(move.Capture instanceof King){
-            String winner;
-            String message;
-            if(move.piece.getColor() == PieceColor.WHITE){
-                winner = "WHITE";
-                message = whiteName + " (White) wins!";
+    /**
+     * Determines whether the King of the given color is currently in check.
+     *
+     * @param color the color of the King to test
+     * @return {@code true} if the King is attacked by any opponent piece
+     */
+    public boolean isKingInCheck(PieceColor color){
+        Piece king = null;
+        for(Piece p : pieceList){
+            if(p instanceof King && p.getColor() == color){
+                king = p;
+                break;
             }
-            else{
-                winner = "BLACK";
-                message = blackName + " (Black) wins!";
-            }
-            ServerClient.postResult(whiteName, blackName, winner);
-            JOptionPane.showMessageDialog(this, message, "Game Over", JOptionPane.INFORMATION_MESSAGE);
-            System.exit(0);
         }
+        if(king == null) return false;
+
+        for(Piece p : pieceList){
+            if(p.getColor() != color && p.isValidMove(king.col, king.row, this)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether the given color has at least one legal move available.
+     * Used to detect checkmate and stalemate.
+     *
+     * @param color the color to test
+     * @return {@code true} if any legal move exists; {@code false} if it's checkmate or stalemate
+     */
+    public boolean hasLegalMoves(PieceColor color){
+        for(Piece p : new ArrayList<>(pieceList)){
+            if(p.getColor() == color){
+                for(int c = 0; c < 8; c++){
+                    for(int r = 0; r < 8; r++){
+                        Move m = new Move(this, p, c, r);
+                        if(validMove(m)) return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
 }

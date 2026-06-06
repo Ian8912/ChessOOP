@@ -1,6 +1,7 @@
 package Piece;
-import Game.Board;
 import java.awt.image.BufferedImage;
+
+import Game.Board;
 
 /**
  * Represents a King chess piece with movement logic restricted to 1 chess board

@@ -261,6 +261,10 @@ public class Board extends JPanel {
                 move.piece.xpos = move.newCol * ts;
                 move.piece.ypos = move.newRow * ts;
 
+                // Mark the piece as moved (used by the pawn two-square rule).
+                // Done here, on the real move only — never during validation/grading scans.
+                move.piece.switchMadeMove();
+
                 capture(move);
 
                 // Record this move's grade so it persists across later status updates.

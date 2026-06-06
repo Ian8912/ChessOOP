@@ -78,14 +78,12 @@ public class Pawn extends Piece {
         if(this.getColor() == PieceColor.WHITE){
             if(!this.readMadeMove()){
                 if((this.row - 1 == toRow) && (this.col + 1 == toCol || this.col - 1 == toCol) && (toPiece != null)){
-                    this.switchMadeMove();
                     return true;
                 }
                 else if((this.row - toRow < 3) && (this.row - toRow > -1) && (toCol == this.col) && (toPiece == null)){
                     if(board.getPiece(this.col, this.row - 1) != null){
                         return false;
                     }
-                    this.switchMadeMove();
                     return true;
                 }
             }
@@ -106,7 +104,9 @@ public class Pawn extends Piece {
                     return true;
                 }
                 else if((this.row - toRow > -3) && (this.row - toRow < 1) && (toCol == this.col) && (toPiece == null)){
-                    this.switchMadeMove();
+                    if(board.getPiece(this.col, this.row + 1) != null){
+                        return false;
+                    }
                     return true;
                 }
             }

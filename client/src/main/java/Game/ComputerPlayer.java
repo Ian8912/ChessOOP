@@ -39,15 +39,33 @@ public class ComputerPlayer {
     }
 
     /**
-     * Selects a random legal move for the computer's color.
+     * Selects the highest-scoring legal move for the computer's color.
+     *
+     * <p>Each legal move is scored via {@link Board#scoreMove(Move)} using the
+     * material-based {@link Evaluator}, and the best-scoring move is returned. Ties
+     * are broken randomly so the computer does not always play the same line. This
+     * is a one-ply (greedy) search — it does not consider the opponent's reply.</p>
      *
      * @param board the current board state
-     * @return a randomly selected legal {@link Move}, or {@code null} if none exist
+     * @return the best-scoring legal {@link Move}, or {@code null} if none exist
      */
     public Move getBestMove(Board board) {
         List<Move> legal = getAllLegalMoves(board);
         if (legal.isEmpty()) return null;
-        return legal.get((int) (Math.random() * legal.size()));
+
+        List<Move> best = new ArrayList<>();
+        int bestScore = Integer.MIN_VALUE;
+        for (Move m : legal) {
+            int score = board.scoreMove(m);
+            if (score > bestScore) {
+                bestScore = score;
+                best.clear();
+                best.add(m);
+            } else if (score == bestScore) {
+                best.add(m);
+            }
+        }
+        return best.get((int) (Math.random() * best.size()));
     }
 
     /**

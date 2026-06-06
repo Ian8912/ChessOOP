@@ -60,6 +60,10 @@ public class Board extends JPanel {
     private String whiteName = "White";
     private String blackName = "Black";
 
+    /** Quality label of each side's most recent move, kept so it persists across status updates. */
+    private String whiteGrade = "";
+    private String blackGrade = "";
+
     /** Handles mouse input events and piece interaction. */
     public Input in = new Input(this);
 
@@ -245,6 +249,12 @@ public class Board extends JPanel {
 
         if(validMove(move)){
             if((move.piece.col != move.newCol || move.piece.row != move.newRow)){
+
+                // Grade the move's quality before applying it (both sides are graded).
+                PieceColor mover = move.piece.getColor();
+                int best = bestScore(mover);
+                int chosen = scoreMove(move);
+
                 move.piece.col = move.newCol;
                 move.piece.row = move.newRow;
 
@@ -252,6 +262,13 @@ public class Board extends JPanel {
                 move.piece.ypos = move.newRow * ts;
 
                 capture(move);
+
+                // Record this move's grade so it persists across later status updates.
+                if(best != Integer.MIN_VALUE){
+                    String grade = gradeLabel(best - chosen);
+                    if(mover == PieceColor.WHITE) whiteGrade = grade;
+                    else blackGrade = grade;
+                }
 
                 whiteTurn = !whiteTurn;
 
@@ -276,10 +293,10 @@ public class Board extends JPanel {
                     }
                 }
                 else if(isKingInCheck(nextColor)){
-                    infoArea.setText(" " + nextName + " is in CHECK!\n\n It is " + nextName + "'s turn");
+                    updateInfo(" " + nextName + " is in CHECK!\n\n It is " + nextName + "'s turn");
                 }
                 else{
-                    infoArea.setText(" It is " + nextName + "'s turn");
+                    updateInfo(" It is " + nextName + "'s turn");
                 }
 
                 // Trigger AI move if it is now the computer's turn
@@ -417,6 +434,96 @@ public class Board extends JPanel {
             }
         }
         return false;
+    }
+
+    /**
+     * Evaluates the position that would result from applying {@code move}, scored
+     * from the moving piece's perspective in centipawns.
+     *
+     * <p>The move is simulated on the live board (the piece is moved and any captured
+     * piece removed), evaluated via {@link Evaluator}, then fully undone — mirroring
+     * the simulation pattern in {@link #validMove(Move)}. Pawn promotion is not
+     * simulated here, so a promoting move is scored as a plain pawn move; this is an
+     * accepted limitation of the current material-only evaluation.</p>
+     *
+     * @param move the move to score
+     * @return the resulting material balance in centipawns from the mover's perspective
+     * @see Evaluator#evaluate(Board, PieceColor)
+     */
+    public int scoreMove(Move move){
+        PieceColor color = move.piece.getColor();
+        int oldCol = move.piece.col;
+        int oldRow = move.piece.row;
+        Piece captured = getPiece(move.newCol, move.newRow);
+
+        move.piece.col = move.newCol;
+        move.piece.row = move.newRow;
+        if(captured != null) pieceList.remove(captured);
+
+        int score = Evaluator.evaluate(this, color);
+
+        move.piece.col = oldCol;
+        move.piece.row = oldRow;
+        if(captured != null) pieceList.add(captured);
+
+        return score;
+    }
+
+    /**
+     * Finds the highest score achievable by {@code color} among all of its legal
+     * moves in the current position.
+     *
+     * <p>Used to grade a player's chosen move: the gap between this best score and
+     * the score of the move actually played is the move's "centipawn loss".</p>
+     *
+     * @param color the color whose legal moves are searched
+     * @return the best achievable score in centipawns, or {@link Integer#MIN_VALUE}
+     *         if {@code color} has no legal moves
+     */
+    public int bestScore(PieceColor color){
+        int best = Integer.MIN_VALUE;
+        for(Piece p : new ArrayList<>(pieceList)){
+            if(p.getColor() != color) continue;
+            for(int c = 0; c < 8; c++){
+                for(int r = 0; r < 8; r++){
+                    Move m = new Move(this, p, c, r);
+                    if(validMove(m)) best = Math.max(best, scoreMove(m));
+                }
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Sets the info area to the given status line, then re-appends each side's
+     * most recent move grade so the grades persist across turn-status updates.
+     *
+     * <p>Without this, a fresh {@code setText} for the next player's turn would
+     * erase the grade just shown — in computer mode the AI's immediate reply
+     * would wipe the human's grade before it could be read.</p>
+     *
+     * @param status the status line to show above the move grades
+     */
+    private void updateInfo(String status){
+        StringBuilder sb = new StringBuilder(status);
+        if(!whiteGrade.isEmpty()) sb.append("\n " + whiteName + "'s move: " + whiteGrade);
+        if(!blackGrade.isEmpty()) sb.append("\n " + blackName + "'s move: " + blackGrade);
+        infoArea.setText(sb.toString());
+    }
+
+    /**
+     * Maps a move's centipawn loss to a human-readable quality label.
+     *
+     * @param loss the centipawn loss (best achievable score minus the chosen move's score)
+     * @return a short label describing the move's quality
+     */
+    private String gradeLabel(int loss){
+        if(loss <= 0)   return "Best move ⭐";
+        if(loss <= 30)  return "Excellent";
+        if(loss <= 90)  return "Good";
+        if(loss <= 200) return "Inaccuracy ?!";
+        if(loss <= 400) return "Mistake ?";
+        return "Blunder ??";
     }
 
 }

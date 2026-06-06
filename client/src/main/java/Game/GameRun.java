@@ -1,6 +1,13 @@
 package Game;
-import java.awt.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Font;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+
 import Piece.PieceColor;
 
 /**
@@ -59,11 +66,14 @@ public class GameRun {
             board.setComputerPlayer(new ComputerPlayer(computerColor));
         }
 
-        JTextArea infoArea = new JTextArea(5, 23);
+        JTextArea infoArea = new JTextArea(5, 32);
         infoArea.setEditable(false);
         infoArea.setFont(new Font("Monospaced", Font.BOLD, 14));
+        infoArea.setLineWrap(true);
+        infoArea.setWrapStyleWord(true);
         infoArea.setText(" Welcome to Java Chess\n\n It is White's turn");
         JScrollPane scrollPane = new JScrollPane(infoArea);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         board.setInfoArea(infoArea);
 

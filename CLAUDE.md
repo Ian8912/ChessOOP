@@ -52,10 +52,10 @@ Two independent modules sharing no code:
 - **DTOs** are Java `record` classes in `api/dto/`
 - **Elo system:** K-factor=32, standard chess Elo formula in `ResultService`
 
-### Database Profiles
-- **H2 (default/dev):** `application-h2.properties` — in-memory `jdbc:h2:mem:chess`, console at `/h2-console`
-- **Postgres (prod):** `application-postgres.properties` — reads connection from env vars (`SPRING_DATASOURCE_URL`, etc.)
-- **Docker:** `docker-compose.yml` provides a Postgres 16 container (db: `chessdb`, user: `chess`, pass: `secret`)
+### Database
+- **PostgreSQL only.** Single config in `application.properties`; connection comes from `SPRING_DATASOURCE_URL`/`_USERNAME`/`_PASSWORD` env vars, defaulting to the local Docker Postgres (`jdbc:postgresql://localhost:5434/chessdb`, user `chess`, pass `secret`).
+- **Docker:** `docker compose up -d` runs Postgres 16 (db `chessdb`) + the API + Adminer (DB viewer at `http://localhost:8081`). DB published on host port `5434`.
+- **Tests:** start a throwaway Postgres via Testcontainers (`@ServiceConnection`), so running `:server:test` requires Docker.
 
 ## Conventions
 - Client uses uppercase package names (`Game/`, `Piece/`) — match this when adding client code

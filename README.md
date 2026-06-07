@@ -27,7 +27,7 @@ Originally built as a collaborative class project, I (Ian Lingo) have since take
   - `Piece`: Contains all chess piece classes (`Pawn`, `Rook`, `Bishop`, etc.) with piece-specific logic.
 
 - server/ <br>
-  - Spring Boot REST API with H2 (dev) and PostgreSQL (prod) database profiles. Stores player profiles, Elo ratings, and game results.
+  - Spring Boot REST API backed by PostgreSQL. Stores player profiles, Elo ratings, and game results.
 
 The entry point is the `GameRun.java` file within the `Game` package, which initializes and launches the chess
 game interface. <br>
@@ -51,8 +51,7 @@ game interface. <br>
   - `GET /api/v1/leaderboard?limit=N` -> fetch top N players
 - Player "profiles" are automatically created or updated by name.
 - Elo reating system with wins/losses tracked.
-- In-memory H2 database for development console available at: [http//localhost:8080/h2-console](http//localhost:8080/h2-console)
-- PostgreSQL for production via Docker Compose (`docker compose up -d`)
+- Backed by PostgreSQL, run via Docker Compose (`docker compose up -d`), with Adminer as a web database viewer.
 - Game results are automatically received from the Swing client upon game completion. 
 
 ## How to Run
@@ -79,21 +78,15 @@ gradlew.bat :client:run </pre>
 
 #### Run Server (REST API):
 
-<pre># On macOS/Linux
-./gradlew :server:bootRun
-
-# On Windows
-gradlew.bat :server:bootRun </pre>
-Once running:
-
-- Visit H2 console -> `http://localhost:8080/h2-console`
-  - JDBC URL: `jdbc:h2:mem:chess`
-  - User: `sa`
-  - Password: _(blank)_
+The server is backed by PostgreSQL, so run it with Docker (see
+**Run the full backend with Docker** below) — that starts the database, the API,
+and a web DB viewer together. To run the API on its own against a database, see
+**Run the API against Postgres without Docker**.
 
 ### Test API (optional)
 
-<pre># record a result (White beats Black)
+<pre># record a result (White beats Black). No API key needed locally; in a deployed
+# environment that sets APP_API_KEY, add: -H "X-API-Key: YOUR_KEY"
 curl -X POST http://localhost:8080/api/v1/results \
   -H "Content-Type: application/json" \
   -d '{"whiteName":"Alice","blackName":"Bob","winner":"WHITE"}'
@@ -133,11 +126,16 @@ Once it is up, open these in your browser:
 | Password | `secret` |
 | Database | `chessdb` |
 
-The data is created by playing games in the client. Point the client at the
-server (and send the API key the server expects):
+The data is created by playing games in the client. Locally, just run the client —
+it posts to `http://localhost:8080` by default and no API key is required:
 
 <pre># On Windows
-gradlew.bat :client:run "-Dchess.server.url=http://localhost:8080" "-Dchess.api.key=dev-local-key"</pre>
+gradlew.bat :client:run</pre>
+
+If you connect to a deployed server that sets `APP_API_KEY`, pass the matching key:
+
+<pre>$env:CHESS_SERVER_URL="https://your-host"; $env:CHESS_API_KEY="YOUR_KEY"
+gradlew.bat :client:run</pre>
 
 > The Docker Postgres is published on host port **5434** (not 5432) to avoid
 > clashing with any PostgreSQL you have installed locally. To connect a desktop
@@ -148,12 +146,10 @@ gradlew.bat :client:run "-Dchess.server.url=http://localhost:8080" "-Dchess.api.
 <pre># Start just the database container
 docker compose up -d db
 
-# On macOS/Linux
-SPRING_PROFILES_ACTIVE=postgres SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/chessdb \
-  SPRING_DATASOURCE_USERNAME=chess SPRING_DATASOURCE_PASSWORD=secret ./gradlew :server:bootRun
+# On macOS/Linux (defaults already point at localhost:5434, so env vars are optional)
+./gradlew :server:bootRun
 
-# On Windows (PowerShell)
-$env:SPRING_PROFILES_ACTIVE="postgres"
+# On Windows (PowerShell) — override the connection only if needed
 $env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5434/chessdb"
 $env:SPRING_DATASOURCE_USERNAME="chess"; $env:SPRING_DATASOURCE_PASSWORD="secret"
 gradlew.bat :server:bootRun </pre>
@@ -164,7 +160,7 @@ gradlew.bat :server:bootRun </pre>
     <li> Demonstrates <strong>Object-Oriented Principles and Design</strong> (abstraction, polymorphism, inheritance, encapsulation</li>
     <li> GUI development using <strong>Java Swing</strong></li>
     <li> Practical use of <strong>Gradle (Kotlin DSL)</strong> multi-module builds.</li>
-    <li> Backend experience with <strong>Spring Boot, REST APIs, H2, and PostgreSQL</strong>.</li>
+    <li> Backend experience with <strong>Spring Boot, REST APIs, and PostgreSQL</strong>.</li>
     <li> Implements an <strong>Elo</strong> rating system to persist player performance.</li>
     <li> Collaboration with <strong>Git</strong>, version control, and clean architecture.</li>
 </ul>

@@ -28,12 +28,13 @@ services:
       db:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: postgres
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/chessdb
       SPRING_DATASOURCE_USERNAME: chess
       SPRING_DATASOURCE_PASSWORD: secret
-      # Override in real environments; the client must send the same value.
-      APP_API_KEY: ${APP_API_KEY:-dev-local-key}
+      # Blank by default so local writes work with no key (the guard disables
+      # itself when blank). Set APP_API_KEY in real environments to require it;
+      # the client then sends it via CHESS_API_KEY.
+      APP_API_KEY: ${APP_API_KEY:-}
     ports:
       - "8080:8080"
 

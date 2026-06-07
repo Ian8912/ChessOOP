@@ -20,7 +20,7 @@ import java.io.IOException;
  *
  * <p>Clients must send the configured key in the {@code X-API-Key} header. The key
  * is read from {@code app.api-key} (env {@code APP_API_KEY}). When that value is
- * blank the guard is disabled — convenient for local H2 development — and a warning
+ * blank the guard is disabled — convenient for local development — and a warning
  * is logged at startup so an unprotected deployment is obvious. Read endpoints
  * (e.g. the leaderboard) are intentionally left open.</p>
  */

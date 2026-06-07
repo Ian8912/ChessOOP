@@ -51,3 +51,13 @@ application {
     // Define the main class for the application.
     mainClass = "Game.GameRun"
 }
+
+// Forward chess.* system properties from the Gradle invocation to the app's JVM,
+// so `gradlew :client:run -Dchess.server.url=... -Dchess.api.key=...` reaches the
+// client. (Environment variables CHESS_SERVER_URL / CHESS_API_KEY are inherited
+// automatically and also work.)
+tasks.named<JavaExec>("run") {
+    for (name in listOf("chess.server.url", "chess.api.key")) {
+        System.getProperty(name)?.let { systemProperty(name, it) }
+    }
+}

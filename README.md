@@ -1,4 +1,4 @@
-# Java Chess Game: full-stack chess with an AI opponent & Elo leaderboards
+# Java Chess Game: Full-Stack Chess with an AI Opponent & Elo Leaderboards
 
 ![Chess gameplay - AI move + grading](images/java-chessgame-demo.gif)
 
@@ -8,19 +8,18 @@
 
 ## Project Overview
 
-This project showcases our understanding of <strong>Object-Oriented Programming (OOP)</strong> by building a fully
-functional chess game using Java with a <strong>Swing-based GUI</strong>. <br>
+This project began as a collaborative class project and showcases strong <strong>Object-Oriented Programming (OOP)</strong> fundamentals. I've since led its expansion into a full-stack application using Java with a <strong>Swing-based GUI</strong>. <br>
 
 ![Chess game - opening GUI](images/chess-opening-gui.png)
 
 ## Development Notes
 
-Originally built as a collaborative class project, I have since taken the lead on expanding the application far beyond the original requirements. My additions include:
+Beyond the original class requirements, my additions include:
 
 - Creating JavaDocs documentation.
 - Migrating the project to a multi-module Gradle build (client + server).
 - Adding a **computer opponent (AI)** that selects moves with a negamax search (alpha-beta pruning + quiescence), so it weighs the opponent's reply instead of grabbing material blindly.
-- Adding **per-move quality grading** (Best move → Blunder) shown to each player, using the same two-sided evaluation.
+- Adding **per-move quality grading** (Best move -> Blunder) shown to each player, using the same two-sided evaluation.
 - Adding **check, checkmate, and stalemate detection** with end-of-game dialogs.
 - Redesigning the **GUI** with a modern flat theme, move highlights, board coordinates, and an info panel showing live material score, an advantage bar, and captured pieces.
 - Implementing a Spring Boot backend for leaderboards and results, with REST APIs and Elo rating updates.
@@ -49,7 +48,7 @@ game interface. <br>
 
 - **Game modes** chosen at launch: Player vs Player, or Player vs Computer (pick whether you play White or Black).
 - **Computer opponent (AI):** chooses moves with a negamax search (alpha-beta pruning + a capture-resolving quiescence search), so it considers the opponent's reply and avoids hanging pieces.
-- **Move grading:** every move is rated — Best move ⭐, Excellent, Good, Inaccuracy ?!, Mistake ?, or Blunder ?? — based on how much it loses versus the best available move.
+- **Move grading:** every move is rated (Best move ⭐, Excellent, Good, Inaccuracy ?!, Mistake ?, or Blunder ??) based on how much it loses versus the best available move.
 - **Full rule enforcement:** per-piece legal moves, turn order, pawn promotion to a Queen, and **check / checkmate / stalemate** detection with an end-of-game dialog.
 - **Modern board UI:** anti-aliased rendering, a chess.com/lichess-style color scheme, file/rank coordinate labels, and a FlatLaf dark theme.
 - **Move highlights:** the selected piece's square, its legal destinations (dots) and captures (rings), the last move played, and a king in check.
@@ -73,20 +72,64 @@ game interface. <br>
 - Integration test runs against a **real PostgreSQL via Testcontainers**.
 - Game results are automatically received from the Swing client upon game completion.
 
+## How the AI Works
+
+The computer opponent doesn't follow a fixed script. It **looks ahead** and picks the move that leaves it in the best position. Here's the idea in plain terms.
+
+### 1. Scoring a position (the evaluation)
+
+To compare moves, the AI needs to put a number on how good a position is. It does this by counting **material**, adding up the value of each side's pieces and subtracting the opponent's. Values are measured in _centipawns_ (hundredths of a pawn), the standard chess unit:
+
+| Piece  | Value (centipawns) |
+| ------ | ------------------ |
+| Pawn   | 100                |
+| Knight | 320                |
+| Bishop | 330                |
+| Rook   | 500                |
+| Queen  | 900                |
+| King   | 20,000             |
+
+A positive score means the side being scored is ahead; negative means behind. (The king's value is huge so that losing it dwarfs everything else.) Right now the score is **material only**, a clean foundation that positional terms like piece-square tables or king safety could build on later.
+
+### 2. Looking ahead (negamax search)
+
+A move that _wins_ a piece is worthless if it _loses_ a bigger one next turn. So the AI plays out each candidate move, then imagines the opponent's best reply, scoring the position a few moves deep. It assumes both sides always pick their strongest move. What's good for you is exactly as bad for your opponent, which is the trick **negamax** uses to search both sides with one simple rule. The engine currently looks **2 plies** ahead (your move + the opponent's reply).
+
+To stay fast, it uses **alpha-beta pruning**: once a reply is found that's good enough to refute a move, it stops examining that move's other branches, since they can't change the decision. This skips large chunks of the tree without affecting the result.
+
+### 3. Not getting fooled mid-trade (quiescence)
+
+If the AI simply stopped counting after 2 moves, it might stop **in the middle of a capture** (e.g. right after grabbing a pawn but before the recapture) and think it's winning. To prevent this, when it reaches the end of its look-ahead it runs a small **quiescence search** that resolves any outstanding captures first. The upshot: hanging your queen is correctly punished, but a fair trade that gets recaptured is _not_ mistaken for a blunder. (Ties between equally-good moves are broken randomly, so the computer doesn't always play the same line.)
+
+### 4. Grading your moves
+
+The same search powers the **move-quality feedback**. After you move, the AI compares your move's score against the _best_ move it found, and the difference (your "centipawn loss") becomes a label:
+
+| Your move loses…   | Grade         |
+| ------------------ | ------------- |
+| nothing (the best) | Best move ⭐  |
+| ≤ 30               | Excellent     |
+| ≤ 90               | Good          |
+| ≤ 200              | Inaccuracy ?! |
+| ≤ 400              | Mistake ?     |
+| more than 400      | Blunder ??    |
+
+So a "Blunder ??" means there was a move available worth more than four pawns over the one you played.
+
 ## How to Run
 
 ### Prerequisites
 
 - **Java 24** (the Gradle toolchain will fetch it if missing)
-- **Gradle wrapper** (included — use `gradlew` / `gradlew.bat`)
-- **Docker Desktop** — required to run the backend, and to run the server tests (they use Testcontainers). You can play the chess game without it; results just won't be saved.
+- **Gradle wrapper** (included, use `gradlew` / `gradlew.bat`)
+- **Docker Desktop**: required to run the backend, and to run the server tests (they use Testcontainers). You can play the chess game without it; results just won't be saved.
 
 ### Quick Start
 
 <pre># 1) Start the backend (PostgreSQL + API + Adminer DB viewer)
 docker compose up -d
 
-# 2) Play chess — results save automatically, no API key needed locally
+# 2) Play chess, results save automatically, no API key needed locally
 gradlew.bat :client:run
 
 # 3) See the leaderboard
@@ -111,13 +154,13 @@ gradlew.bat :client:run </pre>
 #### Run Server (REST API):
 
 The server is backed by PostgreSQL, so run it with Docker (see
-**Run the full backend with Docker** below) — that starts the database, the API,
+**Run the full backend with Docker** below), which starts the database, the API,
 and a web DB viewer together. To run the API on its own against a database, see
 **Run the API against Postgres without Docker**.
 
 #### Run the full backend with Docker (recommended)
 
-This starts everything — PostgreSQL, the REST API, and a web database viewer —
+This starts everything (PostgreSQL, the REST API, and a web database viewer)
 with a single command. Requires Docker Desktop to be running.
 
 <pre># Build and start Postgres + API + Adminer
@@ -131,11 +174,11 @@ docker compose down -v</pre>
 
 Once it is up, open these in your browser:
 
-| What                              | URL                                        |
-| --------------------------------- | ------------------------------------------ |
-| Leaderboard (live JSON)           | `http://localhost:8080/api/v1/leaderboard` |
-| **Adminer — browse the database** | `http://localhost:8081`                    |
-| Health check                      | `http://localhost:8080/actuator/health`    |
+| What                             | URL                                        |
+| -------------------------------- | ------------------------------------------ |
+| Leaderboard (live JSON)          | `http://localhost:8080/api/v1/leaderboard` |
+| **Adminer: browse the database** | `http://localhost:8081`                    |
+| Health check                     | `http://localhost:8080/actuator/health`    |
 
 **Logging into Adminer** (to see the `players` and `game_results` tables):
 
@@ -147,7 +190,7 @@ Once it is up, open these in your browser:
 | Password | `secret`   |
 | Database | `chessdb`  |
 
-The data is created by playing games in the client. Locally, just run the client —
+The data is created by playing games in the client. Locally, just run the client,
 it posts to `http://localhost:8080` by default and no API key is required:
 
 ![Chess game - Adminer players table](images/chess-adminer-playerstable.png)
@@ -172,7 +215,7 @@ docker compose up -d db
 # On macOS/Linux (defaults already point at localhost:5434, so env vars are optional)
 ./gradlew :server:bootRun
 
-# On Windows (PowerShell) — override the connection only if needed
+# On Windows (PowerShell), override the connection only if needed
 $env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5434/chessdb"
 $env:SPRING_DATASOURCE_USERNAME="chess"; $env:SPRING_DATASOURCE_PASSWORD="secret"
 gradlew.bat :server:bootRun </pre>
@@ -210,7 +253,7 @@ Everything is configurable via environment variables (or `-D` system properties 
 | `SPRING_DATASOURCE_URL`      | `jdbc:postgresql://localhost:5434/chessdb` | Database connection                        |
 | `SPRING_DATASOURCE_USERNAME` | `chess`                                    | Database user                              |
 | `SPRING_DATASOURCE_PASSWORD` | `secret`                                   | Database password                          |
-| `APP_API_KEY`                | _(blank → guard disabled)_                 | If set, required on `POST /api/v1/results` |
+| `APP_API_KEY`                | _(blank -> guard disabled)_                | If set, required on `POST /api/v1/results` |
 
 > ⚠️ Leaving `APP_API_KEY` blank disables the write guard. That's intentional for local dev; **always set it in a deployed environment.**
 
@@ -219,7 +262,7 @@ Everything is configurable via environment variables (or `-D` system properties 
 <pre># All modules
 gradlew.bat test
 
-# Server only — requires Docker (Testcontainers starts a real PostgreSQL)
+# Server only, requires Docker (Testcontainers starts a real PostgreSQL)
 gradlew.bat :server:test
 
 # Client only
@@ -227,7 +270,7 @@ gradlew.bat :client:test</pre>
 
 ## Deployment
 
-The backend is containerized and driven entirely by environment variables, so only the **server + database** are hosted — the Swing client keeps running on each player's machine, pointed at the deployed server via `CHESS_SERVER_URL` / `CHESS_API_KEY`.
+The backend is containerized and driven entirely by environment variables, so only the **server + database** are hosted; the Swing client keeps running on each player's machine, pointed at the deployed server via `CHESS_SERVER_URL` / `CHESS_API_KEY`.
 
 To deploy (e.g. AWS App Runner / ECS / Elastic Beanstalk):
 
@@ -236,7 +279,7 @@ To deploy (e.g. AWS App Runner / ECS / Elastic Beanstalk):
 3. Set `APP_API_KEY` to turn on the write guard, and give clients the matching `CHESS_API_KEY`.
 4. The platform health-checks `/actuator/health`.
 
-> Local data lives in the Docker `pgdata` volume on your machine and does **not** transfer — a deployed database starts empty.
+> Local data lives in the Docker `pgdata` volume on your machine and does **not** transfer. A deployed database starts empty.
 
 ## Project Significance
 

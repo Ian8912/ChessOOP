@@ -1,15 +1,19 @@
 # Object-Oriented Programming GUI Chess Project
 
-<strong>Developed by:</strong> Ian Lingo, Pedro Perez, and Shaz Momin.
+<strong>Developed by:</strong> Ian Lingo
+
+<strong>Past contributors:</strong> Pedro Perez and Shaz Momin.
 
 ## Project Overview
 
 This project showcases our understanding of <strong>Object-Oriented Programming (OOP)</strong> by building a fully
 functional chess game using Java with a <strong>Swing-based GUI</strong>. <br>
 
+![Chess game - opening GUI](images/chess-opening-gui.png)
+
 ## Development Notes
 
-Originally built as a collaborative class project, I (Ian Lingo) have since taken the lead on expanding the application far beyond the original requirements. My additions include:
+Originally built as a collaborative class project, I have since taken the lead on expanding the application far beyond the original requirements. My additions include:
 
 - Creating JavaDocs documentation.
 - Migrating the project to a multi-module Gradle build (client + server).
@@ -37,6 +41,8 @@ game interface. <br>
 
 ## Features
 
+![Chess game - game mode selection dialog](images/chess-gamemode.png)
+
 ### Client (Swing)
 
 - **Game modes** chosen at launch: Player vs Player, or Player vs Computer (pick whether you play White or Black).
@@ -48,6 +54,8 @@ game interface. <br>
 - **Info side panel:** whose turn it is / check status, each side's live material score with an advantage bar, captured pieces, and each side's latest move grade.
 - Click-and-drag piece movement; prompts for player name(s) before the game.
 - On game end, the result is **automatically sent to the server** (silently skipped if the server is offline).
+
+![Chess game - midgame GUI](images/chess-midgame-gui.png)
 
 ### Server (Spring Boot)
 
@@ -121,24 +129,26 @@ docker compose down -v</pre>
 
 Once it is up, open these in your browser:
 
-| What | URL |
-| --- | --- |
-| Leaderboard (live JSON) | `http://localhost:8080/api/v1/leaderboard` |
-| **Adminer — browse the database** | `http://localhost:8081` |
-| Health check | `http://localhost:8080/actuator/health` |
+| What                              | URL                                        |
+| --------------------------------- | ------------------------------------------ |
+| Leaderboard (live JSON)           | `http://localhost:8080/api/v1/leaderboard` |
+| **Adminer — browse the database** | `http://localhost:8081`                    |
+| Health check                      | `http://localhost:8080/actuator/health`    |
 
 **Logging into Adminer** (to see the `players` and `game_results` tables):
 
-| Field | Value |
-| --- | --- |
-| System | PostgreSQL |
-| Server | `db` |
-| Username | `chess` |
-| Password | `secret` |
-| Database | `chessdb` |
+| Field    | Value      |
+| -------- | ---------- |
+| System   | PostgreSQL |
+| Server   | `db`       |
+| Username | `chess`    |
+| Password | `secret`   |
+| Database | `chessdb`  |
 
 The data is created by playing games in the client. Locally, just run the client —
 it posts to `http://localhost:8080` by default and no API key is required:
+
+![Chess game - Adminer players table](images/chess-adminer-playerstable.png)
 
 <pre># On Windows
 gradlew.bat :client:run</pre>
@@ -184,21 +194,21 @@ Everything is configurable via environment variables (or `-D` system properties 
 
 **Client**
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `CHESS_SERVER_URL` | `http://localhost:8080` | Where the client sends game results |
-| `CHESS_API_KEY` | _(none)_ | Sent as `X-API-Key`; only needed if the server requires one |
+| Variable           | Default                 | Purpose                                                     |
+| ------------------ | ----------------------- | ----------------------------------------------------------- |
+| `CHESS_SERVER_URL` | `http://localhost:8080` | Where the client sends game results                         |
+| `CHESS_API_KEY`    | _(none)_                | Sent as `X-API-Key`; only needed if the server requires one |
 
 (equivalently: `gradlew.bat :client:run -Dchess.server.url=... -Dchess.api.key=...`)
 
 **Server**
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5434/chessdb` | Database connection |
-| `SPRING_DATASOURCE_USERNAME` | `chess` | Database user |
-| `SPRING_DATASOURCE_PASSWORD` | `secret` | Database password |
-| `APP_API_KEY` | _(blank → guard disabled)_ | If set, required on `POST /api/v1/results` |
+| Variable                     | Default                                    | Purpose                                    |
+| ---------------------------- | ------------------------------------------ | ------------------------------------------ |
+| `SPRING_DATASOURCE_URL`      | `jdbc:postgresql://localhost:5434/chessdb` | Database connection                        |
+| `SPRING_DATASOURCE_USERNAME` | `chess`                                    | Database user                              |
+| `SPRING_DATASOURCE_PASSWORD` | `secret`                                   | Database password                          |
+| `APP_API_KEY`                | _(blank → guard disabled)_                 | If set, required on `POST /api/v1/results` |
 
 > ⚠️ Leaving `APP_API_KEY` blank disables the write guard. That's intentional for local dev; **always set it in a deployed environment.**
 

@@ -1,51 +1,84 @@
-# Deploying to AWS (cheapest path)
+# Deploying the Backend to AWS EC2
 
-This guide deploys the **server + database** to a single AWS EC2 free-tier
-instance using `docker-compose.prod.yml` and verifies it. The Swing client stays on each player's
-machine and points at the deployed server via `CHESS_SERVER_URL` / `CHESS_API_KEY`.
+This runbook deploys the **server + PostgreSQL** to a single AWS EC2 instance
+using `docker-compose.prod.yml`. The Swing client stays on each player's machine
+and is pointed at the deployed server via `CHESS_SERVER_URL` / `CHESS_API_KEY`.
 
-The whole thing is reproducible: spinning it back up is the same handful of
-commands below.
+The deployment is fully reproducible from the repo: the steps below clone the
+project, inject secrets via environment variables, and bring the stack up with a
+single command.
 
----
+## Architecture
 
-## Step 0: Set a billing alarm FIRST
+```mermaid
+flowchart LR
+  Client["Swing client<br/>(each player's machine)"] -->|"HTTP :8080 + X-API-Key"| App
+  subgraph EC2["AWS EC2 (single instance, Docker Compose)"]
+    App["Spring Boot API<br/>container :8080"] -->|"jdbc, internal network"| DB[("PostgreSQL 16<br/>container")]
+  end
+```
 
-Billing -> Budgets -> Create budget -> **$1 monthly cost alert** to your email.
-Free tier expires after 12 months (a `t3.micro` is then ~$7-9/mo), so this is
-your safety net against a forgotten resource.
+A single instance runs both containers to keep the footprint minimal. The API is
+the only port exposed to the internet; PostgreSQL is reachable only on the
+internal Docker network. A managed database (e.g. Amazon RDS) would be the next
+step for a production workload, at the cost of a second always-on resource.
 
-## Step 1: Launch an EC2 instance
+## Prerequisites
 
-EC2 -> Launch instance:
+- An AWS account and an EC2 key pair for SSH access.
+- Familiarity with the EC2 console and Docker.
+
+## 1. Provision the instance
+
+Launch an EC2 instance with:
 
 - **AMI:** Amazon Linux 2023
-- **Type:** `t3.micro` (or `t2.micro` - whichever is _Free tier eligible_ in your region)
-- **Key pair:** create one, download the `.pem`
-- **Storage:** 30 GiB gp3 (free-tier ceiling); leave **"Delete on termination" = Yes**
-- **Security group:**
-  - SSH (22) - source **My IP** only
-  - Custom TCP (8080) - source **Anywhere** (the API)
-  - Do NOT open 5432/5434 (Postgres) or 8081 (Adminer)
+- **Instance type:** `t3.micro` (Free Tier eligible)
+- **Storage:** 30 GiB gp3, "Delete on termination" enabled
+- **Security group (inbound):**
+  | Port | Source      | Purpose            |
+  | ---- | ----------- | ------------------ |
+  | 22   | your IP     | SSH administration |
+  | 8080 | `0.0.0.0/0` | REST API           |
 
-## Step 2: SSH in and install Docker
+  PostgreSQL (5432) and Adminer (8081) are intentionally **not** exposed.
+
+## 2. Install the container runtime
+
+SSH in, then install Docker, the Compose plugin, and Buildx (Compose builds
+require Buildx >= 0.17):
 
 ```bash
-ssh -i "chess-key.pem" ec2-user@public-ip
-
 sudo dnf update -y
 sudo dnf install -y docker git
 sudo systemctl enable --now docker
 sudo usermod -aG docker ec2-user
+
 sudo mkdir -p /usr/local/lib/docker/cli-plugins
+
+# Compose plugin
 sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
   -o /usr/local/lib/docker/cli-plugins/docker-compose
-sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+# Buildx plugin (required to build images via Compose)
+BUILDX_VER=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | grep -oP '"tag_name": "\K[^"]+')
+sudo curl -SL "https://github.com/docker/buildx/releases/download/${BUILDX_VER}/buildx-${BUILDX_VER}.linux-amd64" \
+  -o /usr/local/lib/docker/cli-plugins/docker-buildx
+
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/lib/docker/cli-plugins/docker-buildx
 ```
 
-Log out/in (or run `newgrp docker`) so the docker group applies.
+Reconnect (so the `docker` group applies), then confirm:
 
-## Step 3: Add swap (1 GB RAM is tight)
+```bash
+docker --version && docker compose version && docker buildx version
+```
+
+## 3. Tune for a constrained host
+
+A `t3.micro` has 1 GiB of RAM, which the Gradle image build and the running
+JVM + PostgreSQL can exhaust. Add 2 GiB of swap so builds and runtime stay
+stable:
 
 ```bash
 sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
@@ -54,66 +87,80 @@ sudo mkswap /swapfile && sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-## Step 4: Get the code and launch
+The application container additionally caps the JVM heap (`-Xmx320m`, set in
+`docker-compose.prod.yml`) to fit alongside PostgreSQL.
+
+## 4. Configure and launch
+
+`docker-compose.prod.yml` differs from the local `docker-compose.yml` in three
+ways: it omits Adminer, does not publish the database port, and requires
+`POSTGRES_PASSWORD` and `APP_API_KEY` to be set (failing fast if they are not).
 
 ```bash
 git clone https://github.com/Ian8912/ChessOOP.git && cd ChessOOP
 
-export POSTGRES_PASSWORD='choose-a-strong-one'
-export APP_API_KEY="$(openssl rand -hex 24)"
-echo "API KEY = $APP_API_KEY"   # save this - the client needs it
+export POSTGRES_PASSWORD='choose-a-strong-value'
+export APP_API_KEY="$(openssl rand -hex 24)"   # record this; the client must send it
 
 docker compose -f docker-compose.prod.yml up --build -d
 ```
 
-> If the Gradle build runs out of memory on the 1 GB box, build the image
-> locally instead, push it to a free Docker Hub repo, and `docker pull` it on
-> EC2 (replace the `build:` block with `image:`). Swap usually gets it through,
-> just slowly.
+> If the in-container Gradle build exhausts memory, build the image locally,
+> push it to a registry, and replace the `build:` block with `image:` so the
+> instance only pulls. Swap usually carries the build through, if slowly.
 
-## Step 5: Verify (and capture proof for interviews)
+## 5. Verify
+
+On the host:
 
 ```bash
+docker compose -f docker-compose.prod.yml ps
 curl http://localhost:8080/actuator/health                 # -> {"status":"UP"}
-curl "http://localhost:8080/api/v1/leaderboard?limit=10"   # -> JSON array
 ```
 
-From your laptop: open `http://<ec2-public-ip>:8080/actuator/health`.
-Point the client at it and play a game so the leaderboard has data:
+Then confirm it is reachable over the public internet (substitute the instance's
+public IP):
+
+```bash
+curl "http://<public-ip>:8080/api/v1/leaderboard?limit=10"
+```
+
+The instance running the containerized backend:
+
+![AWS EC2 instance running the chess backend](images/chess-aws-instance.png)
+
+The `/api/v1/leaderboard` endpoint returning ranked players from PostgreSQL over
+the public internet:
+
+![Leaderboard served over the public internet](images/chess-aws-leaderboard.png)
+
+To exercise the full path, point the client at the deployment:
 
 ```powershell
-$env:CHESS_SERVER_URL="http://<ec2-public-ip>:8080"; $env:CHESS_API_KEY="<the key>"
+$env:CHESS_SERVER_URL="http://<public-ip>:8080"; $env:CHESS_API_KEY="<the key>"
 gradlew.bat :client:run
 ```
 
-**Take screenshots now** (health check + leaderboard JSON, EC2 console showing
-the running instance). These are your proof after teardown.
+## Cost management and teardown
 
----
+This stack uses no RDS, load balancer, or NAT gateway, so cost is limited to the
+single instance and its volume. To avoid charges when the deployment is no longer
+needed:
 
-## Step 6: Termination Steps
+1. Set a low **AWS Budget alert** (e.g. $1) as a safety net. Note the Free Tier
+   covers a `t3.micro` for 12 months; afterward it is roughly $7-9/month.
+2. **Terminate the instance** (EC2 -> Instances -> Instance state -> Terminate).
+3. **Confirm the EBS volume is deleted.** With "Delete on termination" enabled it
+   is removed automatically; delete any volume left in the `available` state, as
+   detached volumes continue to bill.
+4. **Release any Elastic IP** you allocated. An unassociated Elastic IP is a
+   common source of unexpected charges.
+5. **Delete any snapshots** created during the session.
 
-Do these in order and confirm each:
+Once the instance and its volume are gone (and no Elastic IP remains), the
+deployment incurs no further cost.
 
-1. **Terminate the instance:** EC2 -> Instances -> select -> Instance state ->
-   **Terminate**. This stops all compute charges.
-2. **Confirm the EBS volume is gone:** EC2 -> Volumes. If "Delete on termination"
-   was Yes (Step 1), it's already deleted. If any volume lingers in `available`
-   state, **delete it** - detached volumes still bill.
-3. **Release any Elastic IP:** EC2 -> Elastic IPs. If you allocated one, **release**
-   it. An unattached Elastic IP is the #1 surprise charge.
-4. **Delete snapshots:** EC2 -> Snapshots - delete any you created.
-5. **(Optional) delete the key pair and custom security group** - these are free,
-   but clean them up if you like.
-6. **Confirm in Billing:** Billing -> Bills the next day should show ~$0. The $1
-   budget alarm backstops anything you missed.
+## Re-deploying
 
-Nothing in this stack uses RDS, load balancers, or NAT gateways (the usual money
-pits), so once the instance, volume, and any Elastic IP are gone, billing is $0.
-
----
-
-## Re-deploying later
-
-Repeat Steps 1-4. The app is stateless and the DB starts empty (local `pgdata`
-does not transfer), so a fresh deploy is clean every time.
+Repeat steps 1-4. The application is stateless and the database starts empty
+(local data is not transferred), so each deployment is clean.

@@ -77,4 +77,26 @@ public final class Evaluator {
         }
         return score;
     }
+
+    /**
+     * Returns {@code color}'s total material in centipawns, excluding the king.
+     *
+     * <p>The king is omitted because both sides always have exactly one, so it
+     * carries no information for a captured-material readout and its large value
+     * would dwarf the rest. This is intended for the on-screen score display, not
+     * for search (which uses {@link #evaluate(Board, PieceColor)}).</p>
+     *
+     * @param board the board state to score
+     * @param color the color whose material to total
+     * @return the side's material in centipawns (divide by 100 for pawn units)
+     */
+    public static int material(Board board, PieceColor color) {
+        int total = 0;
+        for (Piece p : board.getPieceList()) {
+            if (p.getColor() == color && !(p instanceof King)) {
+                total += value(p);
+            }
+        }
+        return total;
+    }
 }

@@ -66,16 +66,16 @@ public class GameRun {
             board.setComputerPlayer(new ComputerPlayer(computerColor));
         }
 
-        JTextArea infoArea = new JTextArea(5, 32);
+        JTextArea infoArea = new JTextArea(6, 40);
         infoArea.setEditable(false);
         infoArea.setFont(new Font("Monospaced", Font.BOLD, 14));
         infoArea.setLineWrap(true);
         infoArea.setWrapStyleWord(true);
-        infoArea.setText(" Welcome to Java Chess\n\n It is White's turn");
         JScrollPane scrollPane = new JScrollPane(infoArea);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         board.setInfoArea(infoArea);
+        board.initInfo();
 
         frame.add(board, BorderLayout.CENTER);
         frame.add(scrollPane, BorderLayout.EAST);

@@ -152,6 +152,15 @@ public class Board extends JPanel {
     }
 
     /**
+     * Populates the info area with the opening status and starting material score,
+     * so the score readout is visible before the first move. Call once after
+     * {@link #setInfoArea(JTextArea)} and {@link #setPlayerNames(String, String)}.
+     */
+    public void initInfo(){
+        updateInfo(" Welcome to Java Chess\n\n It is " + whiteName + "'s turn");
+    }
+
+    /**
      * Sets the display names for both players.
      *
      * @param whiteName name of the white player
@@ -719,13 +728,37 @@ public class Board extends JPanel {
      * erase the grade just shown — in computer mode the AI's immediate reply
      * would wipe the human's grade before it could be read.</p>
      *
+     * <p>A live material score for each side (in pawn units, king excluded) is
+     * also appended so players can see who is ahead on material at a glance.</p>
+     *
      * @param status the status line to show above the move grades
      */
     private void updateInfo(String status){
         StringBuilder sb = new StringBuilder(status);
+
+        double whiteScore = Evaluator.material(this, PieceColor.WHITE) / 100.0;
+        double blackScore = Evaluator.material(this, PieceColor.BLACK) / 100.0;
+        sb.append(String.format("%n Score  %s %.1f  |  %s %.1f  %s",
+            whiteName, whiteScore, blackName, blackScore,
+            materialLead(whiteScore, blackScore)));
         if(!whiteGrade.isEmpty()) sb.append("\n " + whiteName + "'s move: " + whiteGrade);
         if(!blackGrade.isEmpty()) sb.append("\n " + blackName + "'s move: " + blackGrade);
         infoArea.setText(sb.toString());
+    }
+
+    /**
+     * Formats the material-lead indicator for the score line: the name of the side
+     * ahead and by how many pawns, or {@code "(even)"} when material is level.
+     *
+     * @param whiteScore white's material in pawn units
+     * @param blackScore black's material in pawn units
+     * @return a parenthesized lead string, e.g. {@code "(White +3.0)"} or {@code "(even)"}
+     */
+    private String materialLead(double whiteScore, double blackScore){
+        double diff = whiteScore - blackScore;
+        if(diff == 0) return "(even)";
+        String leader = (diff > 0) ? whiteName : blackName;
+        return String.format("(%s +%.1f)", leader, Math.abs(diff));
     }
 
     /**

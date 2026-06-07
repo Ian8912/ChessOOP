@@ -7,8 +7,45 @@ services:
       POSTGRES_USER: chess
       POSTGRES_PASSWORD: secret
     ports:
-      - "5432:5432"   # if 5432 is busy, change to "5433:5432"
+      # Host 5434 -> container 5432. 5434 avoids local Postgres installs that
+      # commonly hold 5432/5433. The app and Adminer reach the DB internally on
+      # 5432, so this only matters if you connect from the host directly.
+      - "5434:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chess -d chessdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/chessdb
+      SPRING_DATASOURCE_USERNAME: chess
+      SPRING_DATASOURCE_PASSWORD: secret
+      # Override in real environments; the client must send the same value.
+      APP_API_KEY: ${APP_API_KEY:-dev-local-key}
+    ports:
+      - "8080:8080"
+
+  # Lightweight web UI to browse the database (players, game_results, leaderboard).
+  # Open http://localhost:8081 and log in with the values in the README.
+  adminer:
+    image: adminer:4
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8081:8080"
+
 volumes:
   pgdata:

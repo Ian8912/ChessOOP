@@ -43,8 +43,11 @@ public class ResultService {
     public List<LeaderboardRow> leaderboard(int limit){
         return players.findAll().stream()
                 .sorted(
-                        Comparator.comparingInt(Player::getElo).reversed()
-                                .thenComparingInt(Player::getWins).reversed()
+                        // Highest Elo first, ties broken by most wins. Building the
+                        // ascending comparator and reversing once flips both keys.
+                        Comparator.comparingInt(Player::getElo)
+                                .thenComparingInt(Player::getWins)
+                                .reversed()
                 )
                 .limit(Math.max(1, limit))
                 .map(p -> new LeaderboardRow(p.getName(), p.getElo(), p.getWins(), p.getLosses()))

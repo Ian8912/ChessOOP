@@ -101,16 +101,61 @@ curl -X POST http://localhost:8080/api/v1/results \
 # fetch leaderboard
 curl "http://localhost:8080/api/v1/leaderboard?limit=10" </pre>
 
-#### Run Server with PostgreSQL:
+#### Run the full backend with Docker (recommended)
 
-<pre># Start Postgres container
-docker compose up -d
+This starts everything — PostgreSQL, the REST API, and a web database viewer —
+with a single command. Requires Docker Desktop to be running.
+
+<pre># Build and start Postgres + API + Adminer
+docker compose up --build -d
+
+# Stop everything (keeps the database data)
+docker compose down
+
+# Stop AND wipe the database (fresh start)
+docker compose down -v</pre>
+
+Once it is up, open these in your browser:
+
+| What | URL |
+| --- | --- |
+| Leaderboard (live JSON) | `http://localhost:8080/api/v1/leaderboard` |
+| **Adminer — browse the database** | `http://localhost:8081` |
+| Health check | `http://localhost:8080/actuator/health` |
+
+**Logging into Adminer** (to see the `players` and `game_results` tables):
+
+| Field | Value |
+| --- | --- |
+| System | PostgreSQL |
+| Server | `db` |
+| Username | `chess` |
+| Password | `secret` |
+| Database | `chessdb` |
+
+The data is created by playing games in the client. Point the client at the
+server (and send the API key the server expects):
+
+<pre># On Windows
+gradlew.bat :client:run "-Dchess.server.url=http://localhost:8080" "-Dchess.api.key=dev-local-key"</pre>
+
+> The Docker Postgres is published on host port **5434** (not 5432) to avoid
+> clashing with any PostgreSQL you have installed locally. To connect a desktop
+> tool like pgAdmin to the Docker database, use `localhost:5434`.
+
+#### Run the API against Postgres without Docker (optional)
+
+<pre># Start just the database container
+docker compose up -d db
 
 # On macOS/Linux
-SPRING_PROFILES_ACTIVE=postgres ./gradlew :server:bootRun
+SPRING_PROFILES_ACTIVE=postgres SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/chessdb \
+  SPRING_DATASOURCE_USERNAME=chess SPRING_DATASOURCE_PASSWORD=secret ./gradlew :server:bootRun
 
-# On Windows
-set SPRING_PROFILES_ACTIVE=postgres
+# On Windows (PowerShell)
+$env:SPRING_PROFILES_ACTIVE="postgres"
+$env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5434/chessdb"
+$env:SPRING_DATASOURCE_USERNAME="chess"; $env:SPRING_DATASOURCE_PASSWORD="secret"
 gradlew.bat :server:bootRun </pre>
 
 ## Project Significance

@@ -1,0 +1,13 @@
+# Keep the build context small and force a clean build inside the image.
+.git
+.gradle
+**/.gradle
+build
+**/build
+**/bin
+out
+**/out
+.idea
+**/.idea
+*.iml
+.vscode

@@ -1,4 +1,6 @@
-# Object-Oriented Programming GUI Chess Project
+# Java Chess Game: full-stack chess with an AI opponent & Elo leaderboards
+
+![Chess gameplay - AI move + grading](images/java-chessgame-demo.gif)
 
 <strong>Developed by:</strong> Ian Lingo
 

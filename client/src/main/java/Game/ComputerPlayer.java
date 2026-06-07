@@ -1,6 +1,5 @@
 package Game;
 
-import Piece.Piece;
 import Piece.PieceColor;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,25 +37,35 @@ public class ComputerPlayer {
         return color;
     }
 
+    /** Full-width search depth (plies) the computer looks ahead when choosing a move. */
+    private static final int SEARCH_DEPTH = 2;
+
     /**
-     * Selects the highest-scoring legal move for the computer's color.
+     * Selects the strongest legal move for the computer's color.
      *
-     * <p>Each legal move is scored via {@link Board#scoreMove(Move)} using the
-     * material-based {@link Evaluator}, and the best-scoring move is returned. Ties
-     * are broken randomly so the computer does not always play the same line. This
-     * is a one-ply (greedy) search — it does not consider the opponent's reply.</p>
+     * <p>Each legal move is applied and the resulting position is searched with
+     * {@link Search#negamax} (alpha-beta + quiescence) to {@link #SEARCH_DEPTH}
+     * plies, scored from the opponent's perspective and negated back to this
+     * player's. The highest-scoring move is returned, with ties broken randomly so
+     * the computer does not always play the same line. Unlike the previous greedy
+     * one-ply scoring, this accounts for the opponent's reply, so it no longer hangs
+     * material to grab a defended piece.</p>
      *
      * @param board the current board state
-     * @return the best-scoring legal {@link Move}, or {@code null} if none exist
+     * @return the best legal {@link Move}, or {@code null} if none exist
      */
     public Move getBestMove(Board board) {
-        List<Move> legal = getAllLegalMoves(board);
+        List<Move> legal = board.generateLegalMoves(color);
         if (legal.isEmpty()) return null;
 
+        PieceColor opponent = (color == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
         List<Move> best = new ArrayList<>();
         int bestScore = Integer.MIN_VALUE;
         for (Move m : legal) {
-            int score = board.scoreMove(m);
+            Board.Undo u = board.makeSearchMove(m);
+            int score = -Search.negamax(board, SEARCH_DEPTH - 1, 1, -Search.INF, Search.INF, opponent);
+            board.unmakeSearchMove(u);
+
             if (score > bestScore) {
                 bestScore = score;
                 best.clear();
@@ -66,31 +75,5 @@ public class ComputerPlayer {
             }
         }
         return best.get((int) (Math.random() * best.size()));
-    }
-
-    /**
-     * Enumerates all legal moves available to the computer's color.
-     *
-     * <p>Iterates over a snapshot of the piece list to avoid
-     * {@link java.util.ConcurrentModificationException} when {@link Board#validMove(Move)}
-     * temporarily mutates the board during check simulation.</p>
-     *
-     * @param board the current board state
-     * @return list of all legal moves for this player's color
-     */
-    private List<Move> getAllLegalMoves(Board board) {
-        List<Move> moves = new ArrayList<>();
-        // Snapshot to avoid ConcurrentModificationException during validMove simulation
-        List<Piece> pieces = new ArrayList<>(board.getPieceList());
-        for (Piece p : pieces) {
-            if (p.getColor() != color) continue;
-            for (int col = 0; col < 8; col++) {
-                for (int row = 0; row < 8; row++) {
-                    Move m = new Move(board, p, col, row);
-                    if (board.validMove(m)) moves.add(m);
-                }
-            }
-        }
-        return moves;
     }
 }

@@ -53,6 +53,9 @@ public class Board extends JPanel {
     /** Tracks whether it is white's turn to play. */
     private boolean whiteTurn = true;
 
+    /** Full-width search depth (plies) used to grade each move's quality. */
+    private static final int GRADING_DEPTH = 2;
+
     /** The JTextArea component used to display information associated with the board.*/
     private JTextArea infoArea;
 
@@ -251,9 +254,19 @@ public class Board extends JPanel {
             if((move.piece.col != move.newCol || move.piece.row != move.newRow)){
 
                 // Grade the move's quality before applying it (both sides are graded).
+                // Both the baseline and the chosen move are searched with negamax +
+                // quiescence to the same horizon, so hanging a piece is punished while a
+                // recaptured fair trade is not.
                 PieceColor mover = move.piece.getColor();
-                int best = bestScore(mover);
-                int chosen = scoreMove(move);
+                PieceColor moverOpp = (mover == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
+
+                // Best the mover could have done from this position.
+                int best = Search.negamax(this, GRADING_DEPTH, 0, -Search.INF, Search.INF, mover);
+                // Value of the move actually played: apply it, then search the opponent's
+                // reply to the same horizon and negate back to the mover's perspective.
+                Undo graded = makeSearchMove(move);
+                int chosen = -Search.negamax(this, GRADING_DEPTH - 1, 1, -Search.INF, Search.INF, moverOpp);
+                unmakeSearchMove(graded);
 
                 move.piece.col = move.newCol;
                 move.piece.row = move.newRow;
@@ -268,33 +281,37 @@ public class Board extends JPanel {
                 capture(move);
 
                 // Record this move's grade so it persists across later status updates.
-                if(best != Integer.MIN_VALUE){
-                    String grade = gradeLabel(best - chosen);
-                    if(mover == PieceColor.WHITE) whiteGrade = grade;
-                    else blackGrade = grade;
-                }
+                String grade = gradeLabel(best - chosen);
+                if(mover == PieceColor.WHITE) whiteGrade = grade;
+                else blackGrade = grade;
 
                 whiteTurn = !whiteTurn;
 
+                // The move is complete and the turn has flipped, so `nextColor` is the
+                // player about to move — the side whose king we test for check/mate.
+                // After an AI move this resolves to the human, and vice versa, so we
+                // always evaluate the side to move's king, never the mover's own.
                 PieceColor nextColor = whiteTurn ? PieceColor.WHITE : PieceColor.BLACK;
                 String nextName = whiteTurn ? whiteName : blackName;
 
-                if(!hasLegalMoves(nextColor)){
-                    if(isKingInCheck(nextColor)){
-                        String winner = whiteTurn ? "BLACK" : "WHITE";
-                        String winnerName = whiteTurn ? blackName : whiteName;
-                        ServerClient.postResult(whiteName, blackName, winner);
-                        JOptionPane.showMessageDialog(this,
-                            winnerName + " wins by checkmate!", "Checkmate",
-                            JOptionPane.INFORMATION_MESSAGE);
-                        System.exit(0);
-                    }
-                    else{
-                        JOptionPane.showMessageDialog(this,
-                            "Stalemate — it's a draw!", "Stalemate",
-                            JOptionPane.INFORMATION_MESSAGE);
-                        System.exit(0);
-                    }
+                // Diagnostic snapshot of the side-to-move's king for tracing mate calls.
+                debugKingStatus(nextColor);
+
+                if(isCheckmate(nextColor)){
+                    // Checkmate: the side to move is mated, so the mover (other color) wins.
+                    String winner = (nextColor == PieceColor.WHITE) ? "BLACK" : "WHITE";
+                    String winnerName = (nextColor == PieceColor.WHITE) ? blackName : whiteName;
+                    ServerClient.postResult(whiteName, blackName, winner);
+                    JOptionPane.showMessageDialog(this,
+                        winnerName + " wins by checkmate!", "Checkmate",
+                        JOptionPane.INFORMATION_MESSAGE);
+                    System.exit(0);
+                }
+                else if(isStalemate(nextColor)){
+                    JOptionPane.showMessageDialog(this,
+                        "Stalemate — it's a draw!", "Stalemate",
+                        JOptionPane.INFORMATION_MESSAGE);
+                    System.exit(0);
                 }
                 else if(isKingInCheck(nextColor)){
                     updateInfo(" " + nextName + " is in CHECK!\n\n It is " + nextName + "'s turn");
@@ -396,19 +413,29 @@ public class Board extends JPanel {
     }
 
     /**
-     * Determines whether the King of the given color is currently in check.
+     * Finds the King of the given color.
+     *
+     * @param color the color of the King to locate
+     * @return the {@link King} piece, or {@code null} if it is not on the board
+     */
+    public Piece findKing(PieceColor color){
+        for(Piece p : pieceList){
+            if(p instanceof King && p.getColor() == color){
+                return p;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Determines whether the King of the given color is currently in check, i.e.
+     * attacked by at least one opposing piece on its current square.
      *
      * @param color the color of the King to test
      * @return {@code true} if the King is attacked by any opponent piece
      */
     public boolean isKingInCheck(PieceColor color){
-        Piece king = null;
-        for(Piece p : pieceList){
-            if(p instanceof King && p.getColor() == color){
-                king = p;
-                break;
-            }
-        }
+        Piece king = findKing(color);
         if(king == null) return false;
 
         for(Piece p : pieceList){
@@ -420,20 +447,76 @@ public class Board extends JPanel {
     }
 
     /**
-     * Returns whether the given color has at least one legal move available.
-     * Used to detect checkmate and stalemate.
+     * Lists the opposing pieces currently attacking {@code color}'s king, described
+     * as {@code Name(col,row)}. Used only for diagnostic logging.
+     *
+     * @param color the color whose king's attackers to report
+     * @return the attacking pieces, or an empty list if the king is safe/absent
+     */
+    public List<String> attackersOf(PieceColor color){
+        List<String> attackers = new ArrayList<>();
+        Piece king = findKing(color);
+        if(king == null) return attackers;
+        for(Piece p : pieceList){
+            if(p.getColor() != color && p.isValidMove(king.col, king.row, this)){
+                attackers.add(p.name + "(" + p.col + "," + p.row + ")");
+            }
+        }
+        return attackers;
+    }
+
+    /**
+     * Tests whether {@code move} is geometrically legal for its piece and does not
+     * leave that piece's own king in check — <em>ignoring whose turn it is</em>.
+     *
+     * <p>This is the turn-independent core of legality used by checkmate/stalemate
+     * detection and by search move generation. Keeping it independent of the
+     * {@code whiteTurn} flag is deliberate: the previous detection routed through
+     * {@link #validMove(Move)}, whose turn guard rejected every move whenever the
+     * flag did not match the color under test, producing false checkmates. Callers
+     * that must also enforce turn order (real user input) use {@code validMove}.</p>
+     *
+     * @param move the move to test (its piece's color is taken as the mover)
+     * @return {@code true} if the move is pseudo-legal and leaves the mover's king safe
+     */
+    public boolean isLegalIgnoringTurn(Move move){
+        Piece piece = move.piece;
+        Piece toPiece = getPiece(move.newCol, move.newRow);
+
+        // Cannot capture your own piece (also rejects a no-op move onto own square).
+        if(toPiece != null && toPiece.getColor() == piece.getColor()) return false;
+        if(!piece.isValidMove(move.newCol, move.newRow, this)) return false;
+
+        // Simulate the move and confirm it does not leave the mover's king in check.
+        int oldCol = piece.col;
+        int oldRow = piece.row;
+        if(toPiece != null) pieceList.remove(toPiece);
+        piece.col = move.newCol;
+        piece.row = move.newRow;
+
+        boolean kingSafe = !isKingInCheck(piece.getColor());
+
+        piece.col = oldCol;
+        piece.row = oldRow;
+        if(toPiece != null) pieceList.add(toPiece);
+
+        return kingSafe;
+    }
+
+    /**
+     * Returns whether {@code color} has at least one legal move that leaves its own
+     * king safe. Turn-independent, so it is correct regardless of the
+     * {@code whiteTurn} flag. Used to detect checkmate and stalemate.
      *
      * @param color the color to test
-     * @return {@code true} if any legal move exists; {@code false} if it's checkmate or stalemate
+     * @return {@code true} if any king-safe move exists; {@code false} otherwise
      */
     public boolean hasLegalMoves(PieceColor color){
         for(Piece p : new ArrayList<>(pieceList)){
-            if(p.getColor() == color){
-                for(int c = 0; c < 8; c++){
-                    for(int r = 0; r < 8; r++){
-                        Move m = new Move(this, p, c, r);
-                        if(validMove(m)) return true;
-                    }
+            if(p.getColor() != color) continue;
+            for(int c = 0; c < 8; c++){
+                for(int r = 0; r < 8; r++){
+                    if(isLegalIgnoringTurn(new Move(this, p, c, r))) return true;
                 }
             }
         }
@@ -441,61 +524,191 @@ public class Board extends JPanel {
     }
 
     /**
-     * Evaluates the position that would result from applying {@code move}, scored
-     * from the moving piece's perspective in centipawns.
+     * Counts every legal king-safe move available to {@code color}. Used for
+     * diagnostic logging; {@link #hasLegalMoves(PieceColor)} is cheaper when only
+     * existence matters.
      *
-     * <p>The move is simulated on the live board (the piece is moved and any captured
-     * piece removed), evaluated via {@link Evaluator}, then fully undone — mirroring
-     * the simulation pattern in {@link #validMove(Move)}. Pawn promotion is not
-     * simulated here, so a promoting move is scored as a plain pawn move; this is an
-     * accepted limitation of the current material-only evaluation.</p>
-     *
-     * @param move the move to score
-     * @return the resulting material balance in centipawns from the mover's perspective
-     * @see Evaluator#evaluate(Board, PieceColor)
+     * @param color the color to count moves for
+     * @return the number of legal moves
      */
-    public int scoreMove(Move move){
-        PieceColor color = move.piece.getColor();
-        int oldCol = move.piece.col;
-        int oldRow = move.piece.row;
-        Piece captured = getPiece(move.newCol, move.newRow);
-
-        move.piece.col = move.newCol;
-        move.piece.row = move.newRow;
-        if(captured != null) pieceList.remove(captured);
-
-        int score = Evaluator.evaluate(this, color);
-
-        move.piece.col = oldCol;
-        move.piece.row = oldRow;
-        if(captured != null) pieceList.add(captured);
-
-        return score;
+    public int countLegalMoves(PieceColor color){
+        int count = 0;
+        for(Piece p : new ArrayList<>(pieceList)){
+            if(p.getColor() != color) continue;
+            for(int c = 0; c < 8; c++){
+                for(int r = 0; r < 8; r++){
+                    if(isLegalIgnoringTurn(new Move(this, p, c, r))) count++;
+                }
+            }
+        }
+        return count;
     }
 
     /**
-     * Finds the highest score achievable by {@code color} among all of its legal
-     * moves in the current position.
+     * Checkmate for {@code color}: its king is in check and it has no legal move
+     * that leaves the king safe.
      *
-     * <p>Used to grade a player's chosen move: the gap between this best score and
-     * the score of the move actually played is the move's "centipawn loss".</p>
-     *
-     * @param color the color whose legal moves are searched
-     * @return the best achievable score in centipawns, or {@link Integer#MIN_VALUE}
-     *         if {@code color} has no legal moves
+     * @param color the side to test (the side to move)
+     * @return {@code true} if {@code color} is checkmated
      */
-    public int bestScore(PieceColor color){
-        int best = Integer.MIN_VALUE;
+    public boolean isCheckmate(PieceColor color){
+        return isKingInCheck(color) && !hasLegalMoves(color);
+    }
+
+    /**
+     * Stalemate for {@code color}: its king is <em>not</em> in check yet it has no
+     * legal move — a draw, not a loss.
+     *
+     * @param color the side to test (the side to move)
+     * @return {@code true} if {@code color} is stalemated
+     */
+    public boolean isStalemate(PieceColor color){
+        return !isKingInCheck(color) && !hasLegalMoves(color);
+    }
+
+    /**
+     * Prints a diagnostic snapshot of {@code color}'s king status: current player,
+     * king position, whether the king is in check, the number of legal moves, and
+     * any attacking pieces. Logged on every turn transition so false checkmate
+     * calls can be traced to the exact board state that produced them.
+     *
+     * @param color the side to move whose status to report
+     */
+    private void debugKingStatus(PieceColor color){
+        Piece king = findKing(color);
+        String pos = (king == null) ? "none" : "(" + king.col + "," + king.row + ")";
+        System.out.println("[CHECKMATE DEBUG] player=" + color
+            + " king=" + pos
+            + " inCheck=" + isKingInCheck(color)
+            + " legalMoves=" + countLegalMoves(color)
+            + " attackers=" + attackersOf(color));
+    }
+
+    /**
+     * Records the state needed to undo a move applied during search by
+     * {@link Board#makeSearchMove(Move)}. Returned by make, consumed by
+     * {@link Board#unmakeSearchMove(Undo)}.
+     */
+    public static final class Undo {
+        /** The piece that moved (the pawn, on a promotion). */
+        private final Piece piece;
+        /** The piece's column before the move. */
+        private final int fromCol;
+        /** The piece's row before the move. */
+        private final int fromRow;
+        /** The captured piece removed from the board, or {@code null}. */
+        private final Piece captured;
+        /** The queen substituted in on a promotion, or {@code null}. */
+        private final Piece promoted;
+
+        private Undo(Piece piece, int fromCol, int fromRow, Piece captured, Piece promoted) {
+            this.piece = piece;
+            this.fromCol = fromCol;
+            this.fromRow = fromRow;
+            this.captured = captured;
+            this.promoted = promoted;
+        }
+    }
+
+    /**
+     * Applies {@code move} to the live board for search, returning an {@link Undo}
+     * token that {@link #unmakeSearchMove(Undo)} uses to restore the previous state.
+     *
+     * <p>Unlike {@link #makeMove(Move)} this touches only the logical board state —
+     * piece coordinates, the piece list, promotion, and the {@code whiteTurn} flag —
+     * never screen coordinates, the {@code madeMove} flag, the UI, or game-end
+     * dialogs. The captured piece is recomputed from the destination square rather
+     * than read from {@link Move#Capture}, so the token is always consistent with
+     * the board at make time. Promotion substitutes a {@link Queen} for a pawn that
+     * reaches the back rank, mirroring {@link #capture(Move)}.</p>
+     *
+     * @param move the move to apply
+     * @return an undo token; pass it to {@link #unmakeSearchMove(Undo)} to revert
+     */
+    public Undo makeSearchMove(Move move){
+        Piece piece = move.piece;
+        int fromCol = piece.col;
+        int fromRow = piece.row;
+        Piece captured = getPiece(move.newCol, move.newRow);
+        if(captured != null) pieceList.remove(captured);
+
+        piece.col = move.newCol;
+        piece.row = move.newRow;
+
+        Piece promoted = null;
+        if(piece instanceof Pawn && (move.newRow == 0 || move.newRow == 7)){
+            promoted = new Queen(this, move.newCol, move.newRow, piece.getColor());
+            pieceList.remove(piece);
+            pieceList.add(promoted);
+        }
+
+        whiteTurn = !whiteTurn;
+        return new Undo(piece, fromCol, fromRow, captured, promoted);
+    }
+
+    /**
+     * Reverts a move previously applied by {@link #makeSearchMove(Move)}, exactly
+     * undoing the turn flip, any promotion, the piece's position, and any capture.
+     *
+     * @param u the undo token returned by the matching {@code makeSearchMove} call
+     */
+    public void unmakeSearchMove(Undo u){
+        whiteTurn = !whiteTurn;
+        if(u.promoted != null){
+            pieceList.remove(u.promoted);
+            pieceList.add(u.piece);
+        }
+        u.piece.col = u.fromCol;
+        u.piece.row = u.fromRow;
+        if(u.captured != null) pieceList.add(u.captured);
+    }
+
+    /**
+     * Generates every legal move for {@code color} in the current position.
+     *
+     * <p>Iterates a snapshot of the piece list (so the temporary mutation during
+     * check simulation is safe) and tests every destination square via
+     * {@link #isLegalIgnoringTurn(Move)}, so generation is correct for either color
+     * regardless of the {@code whiteTurn} flag — required because the search makes
+     * moves for both sides.</p>
+     *
+     * @param color the side to move
+     * @return all legal moves for {@code color}
+     */
+    public List<Move> generateLegalMoves(PieceColor color){
+        List<Move> moves = new ArrayList<>();
         for(Piece p : new ArrayList<>(pieceList)){
             if(p.getColor() != color) continue;
             for(int c = 0; c < 8; c++){
                 for(int r = 0; r < 8; r++){
                     Move m = new Move(this, p, c, r);
-                    if(validMove(m)) best = Math.max(best, scoreMove(m));
+                    if(isLegalIgnoringTurn(m)) moves.add(m);
                 }
             }
         }
-        return best;
+        return moves;
+    }
+
+    /**
+     * Generates the legal capturing moves for {@code color} — those landing on an
+     * occupied square. Used by the quiescence search to resolve exchanges.
+     *
+     * @param color the side to move
+     * @return all legal capture moves for {@code color}
+     */
+    public List<Move> generateCaptureMoves(PieceColor color){
+        List<Move> moves = new ArrayList<>();
+        for(Piece p : new ArrayList<>(pieceList)){
+            if(p.getColor() != color) continue;
+            for(int c = 0; c < 8; c++){
+                for(int r = 0; r < 8; r++){
+                    if(getPiece(c, r) == null) continue; // captures only
+                    Move m = new Move(this, p, c, r);
+                    if(isLegalIgnoringTurn(m)) moves.add(m);
+                }
+            }
+        }
+        return moves;
     }
 
     /**

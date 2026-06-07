@@ -18,13 +18,15 @@ import Piece.Rook;
  * foundation for both the computer player's move selection and the move-quality
  * feedback shown to the human player.</p>
  *
- * <p>This evaluation is intentionally shallow — it counts material only and does
- * not look ahead at the opponent's reply, so a move that wins material now but
- * hangs a piece next turn will still score well. Adding a small look-ahead
- * (minimax) is the natural next step for stronger play and more accurate grading.</p>
+ * <p>This evaluation counts material only; it is the leaf evaluation for the
+ * negamax + quiescence search in {@link Search}, which supplies the look-ahead.
+ * Because the search resolves captures, hanging a piece is now detected even
+ * though this function itself does not look ahead. The natural next accuracy
+ * lever is positional terms here (piece-square tables, king safety, mobility).</p>
  *
  * @see Board
  * @see ComputerPlayer
+ * @see Search
  */
 public final class Evaluator {
 

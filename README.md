@@ -105,13 +105,13 @@ If the AI simply stopped counting after 2 moves, it might stop **in the middle o
 
 The same search powers the **move-quality feedback**. After you move, the AI compares your move's score against the _best_ move it found, and the difference (your "centipawn loss") becomes a label:
 
-| Your move loses…   | Grade         |
+| Your move loses... | Grade         |
 | ------------------ | ------------- |
 | nothing (the best) | Best move ⭐  |
-| ≤ 30               | Excellent     |
-| ≤ 90               | Good          |
-| ≤ 200              | Inaccuracy ?! |
-| ≤ 400              | Mistake ?     |
+| <= 30              | Excellent     |
+| <= 90              | Good          |
+| <= 200             | Inaccuracy ?! |
+| <= 400             | Mistake ?     |
 | more than 400      | Blunder ??    |
 
 So a "Blunder ??" means there was a move available worth more than four pawns over the one you played.

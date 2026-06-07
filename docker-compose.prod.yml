@@ -1,0 +1,50 @@
+## Production Compose for a single-host deployment (e.g. one AWS EC2 instance).
+##
+## Differs from docker-compose.yml (local dev) in three ways:
+##   1. No Adminer service       - not needed in prod, and one less thing to secure.
+##   2. Postgres port not published - the DB is reachable only on the internal
+##      compose network (the app talks to it at db:5432); nothing is exposed publicly.
+##   3. Secrets are required      - POSTGRES_PASSWORD and APP_API_KEY must be set in
+##      the environment (the :?set me syntax fails fast if they are missing).
+##
+## Usage:
+##   export POSTGRES_PASSWORD='choose-a-strong-one'
+##   export APP_API_KEY="$(openssl rand -hex 24)"
+##   docker compose -f docker-compose.prod.yml up --build -d
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chessdb
+      POSTGRES_USER: chess
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chess -d chessdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/chessdb
+      SPRING_DATASOURCE_USERNAME: chess
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      APP_API_KEY: ${APP_API_KEY:?set APP_API_KEY}
+      # Cap the JVM heap so the app + Postgres fit on a 1 GB micro instance.
+      JAVA_TOOL_OPTIONS: "-Xmx320m"
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

@@ -1,15 +1,17 @@
 package Game;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import Piece.Bishop;
@@ -56,8 +58,19 @@ public class Board extends JPanel {
     /** Full-width search depth (plies) used to grade each move's quality. */
     private static final int GRADING_DEPTH = 2;
 
-    /** The JTextArea component used to display information associated with the board.*/
-    private JTextArea infoArea;
+    /** Board palette and highlight colors. */
+    private static final Color LIGHT_SQ = new Color(0xEEEED2);
+    private static final Color DARK_SQ  = new Color(0x769656);
+    private static final Color LAST_MOVE = new Color(0xBA, 0xCA, 0x2B, 150);
+    private static final Color SELECTED  = new Color(0xF6, 0xF6, 0x69, 170);
+    private static final Color CHECK_SQ  = new Color(0xE0, 0x4A, 0x4A, 170);
+    private static final Color HINT      = new Color(0x14, 0x14, 0x14, 60);
+
+    /** The styled side panel used to display game information beside the board. */
+    private SidePanel sidePanel;
+
+    /** From/to squares of the most recent move, for highlighting; -1 means none yet. */
+    private int lastFromCol = -1, lastFromRow = -1, lastToCol = -1, lastToRow = -1;
 
     /** Names of the two players, set before the game starts. */
     private String whiteName = "White";
@@ -139,25 +152,25 @@ public class Board extends JPanel {
     }
 
     /**
-     * Connects the chess board with the specified JTextArea.
+     * Connects the chess board with the specified {@link SidePanel}.
      *
-     * <p>This method associates the given {@link JTextArea} to this {@link Board}, so
-     * it can be used to display game information or updates.</p>
+     * <p>This method associates the given panel to this {@link Board}, so it can be
+     * used to display game information or updates.</p>
      *
-     * @param infoArea the {@link JTextArea} info area
+     * @param sidePanel the {@link SidePanel} info panel
      */
-    public void setInfoArea(JTextArea infoArea){
+    public void setSidePanel(SidePanel sidePanel){
 
-        this.infoArea = infoArea;
+        this.sidePanel = sidePanel;
     }
 
     /**
-     * Populates the info area with the opening status and starting material score,
-     * so the score readout is visible before the first move. Call once after
-     * {@link #setInfoArea(JTextArea)} and {@link #setPlayerNames(String, String)}.
+     * Populates the side panel with the opening status and starting material score,
+     * so the readout is visible before the first move. Call once after
+     * {@link #setSidePanel(SidePanel)} and {@link #setPlayerNames(String, String)}.
      */
     public void initInfo(){
-        updateInfo(" Welcome to Java Chess\n\n It is " + whiteName + "'s turn");
+        updateInfo("Welcome to Java Chess\n\nIt is " + whiteName + "'s turn");
     }
 
     /**
@@ -211,16 +224,85 @@ public class Board extends JPanel {
     public void paintComponent(Graphics g){
 
         Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
+        // Checkered squares. Screen x = col*ts, y = row*ts (matches piece coordinates).
         for (int r = 0; r < row; r++){
             for (int c = 0; c < col; c++){
-                g2.setColor((c+r) % 2 == 0 ? new Color(255, 255, 255) : new Color(122, 173, 107) );
-                g2.fillRect(r* ts, c*ts, ts, ts);
+                g2.setColor((c + r) % 2 == 0 ? LIGHT_SQ : DARK_SQ);
+                g2.fillRect(c * ts, r * ts, ts, ts);
             }
         }
 
+        // Highlight the previous move's from/to squares.
+        if(lastToCol >= 0){
+            g2.setColor(LAST_MOVE);
+            g2.fillRect(lastFromCol * ts, lastFromRow * ts, ts, ts);
+            g2.fillRect(lastToCol * ts, lastToRow * ts, ts, ts);
+        }
+
+        // Highlight the side-to-move's king when it is in check.
+        PieceColor toMove = whiteTurn ? PieceColor.WHITE : PieceColor.BLACK;
+        if(isKingInCheck(toMove)){
+            Piece king = findKing(toMove);
+            if(king != null){
+                g2.setColor(CHECK_SQ);
+                g2.fillRect(king.col * ts, king.row * ts, ts, ts);
+            }
+        }
+
+        // Highlight the selected piece's square and its legal destinations,
+        // but only while it is that piece's turn (so opponent pieces show nothing).
+        if(selPiece != null && (selPiece.getColor() == PieceColor.WHITE) == whiteTurn){
+            g2.setColor(SELECTED);
+            g2.fillRect(selPiece.col * ts, selPiece.row * ts, ts, ts);
+
+            g2.setColor(HINT);
+            for(int c = 0; c < 8; c++){
+                for(int r = 0; r < 8; r++){
+                    if(!isLegalIgnoringTurn(new Move(this, selPiece, c, r))) continue;
+                    if(getPiece(c, r) != null){
+                        // Capture target: ring around the square.
+                        g2.setStroke(new BasicStroke(Math.max(3f, ts / 18f)));
+                        g2.drawOval(c * ts + 4, r * ts + 4, ts - 8, ts - 8);
+                    } else {
+                        // Quiet move: centered dot.
+                        int d = ts / 3;
+                        g2.fillOval(c * ts + (ts - d) / 2, r * ts + (ts - d) / 2, d, d);
+                    }
+                }
+            }
+        }
+
+        drawCoordinates(g2);
+
+        // Draw the selected piece last so it floats above the rest while dragging.
         for (Piece piece : pieceList){
-            piece.paint(g2);
+            if(piece != selPiece) piece.paint(g2);
+        }
+        if(selPiece != null) selPiece.paint(g2);
+    }
+
+    /**
+     * Draws file letters (a–h) along the bottom rank and rank numbers (1–8) along
+     * the left file, inside the square corners, colored to contrast their square.
+     *
+     * @param g2 the graphics context to draw on
+     */
+    private void drawCoordinates(Graphics2D g2){
+        g2.setFont(new Font("SansSerif", Font.BOLD, Math.max(11, ts / 7)));
+        // Rank numbers on the leftmost column (col 0): 8 at the top down to 1.
+        for(int r = 0; r < 8; r++){
+            g2.setColor((r % 2 == 0) ? DARK_SQ : LIGHT_SQ);
+            g2.drawString(String.valueOf(8 - r), 4, r * ts + 16);
+        }
+        // File letters on the bottom row (row 7): a..h left to right.
+        for(int c = 0; c < 8; c++){
+            g2.setColor(((c + 7) % 2 == 0) ? DARK_SQ : LIGHT_SQ);
+            g2.drawString(String.valueOf((char) ('a' + c)), c * ts + ts - 14, 8 * ts - 6);
         }
     }
 
@@ -288,6 +370,12 @@ public class Board extends JPanel {
                 move.piece.switchMadeMove();
 
                 capture(move);
+
+                // Remember this move's squares so the board can highlight it.
+                lastFromCol = move.oldCol;
+                lastFromRow = move.oldRow;
+                lastToCol = move.newCol;
+                lastToRow = move.newRow;
 
                 // Record this move's grade so it persists across later status updates.
                 String grade = gradeLabel(best - chosen);
@@ -734,31 +822,67 @@ public class Board extends JPanel {
      * @param status the status line to show above the move grades
      */
     private void updateInfo(String status){
-        StringBuilder sb = new StringBuilder(status);
+        if(sidePanel == null) return;
 
         double whiteScore = Evaluator.material(this, PieceColor.WHITE) / 100.0;
         double blackScore = Evaluator.material(this, PieceColor.BLACK) / 100.0;
-        sb.append(String.format("%n Score  %s %.1f  |  %s %.1f  %s",
-            whiteName, whiteScore, blackName, blackScore,
-            materialLead(whiteScore, blackScore)));
-        if(!whiteGrade.isEmpty()) sb.append("\n " + whiteName + "'s move: " + whiteGrade);
-        if(!blackGrade.isEmpty()) sb.append("\n " + blackName + "'s move: " + blackGrade);
-        infoArea.setText(sb.toString());
+
+        // Glyphs for pieces each side has captured (i.e. the opponent's missing pieces).
+        String whiteCaptured = capturedGlyphs(PieceColor.BLACK);
+        String blackCaptured = capturedGlyphs(PieceColor.WHITE);
+
+        sidePanel.update(status, whiteName, blackName, whiteScore, blackScore,
+            whiteGrade, blackGrade, whiteCaptured, blackCaptured,
+            materialLead(whiteScore, blackScore));
     }
 
     /**
-     * Formats the material-lead indicator for the score line: the name of the side
-     * ahead and by how many pawns, or {@code "(even)"} when material is level.
+     * Formats the material-lead indicator: the side ahead and by how many pawns,
+     * or {@code "even"} when material is level.
      *
      * @param whiteScore white's material in pawn units
      * @param blackScore black's material in pawn units
-     * @return a parenthesized lead string, e.g. {@code "(White +3.0)"} or {@code "(even)"}
+     * @return a lead string, e.g. {@code "White +3.0"} or {@code "even"}
      */
     private String materialLead(double whiteScore, double blackScore){
         double diff = whiteScore - blackScore;
-        if(diff == 0) return "(even)";
+        if(diff == 0) return "even";
         String leader = (diff > 0) ? whiteName : blackName;
-        return String.format("(%s +%.1f)", leader, Math.abs(diff));
+        return String.format("%s +%.1f", leader, Math.abs(diff));
+    }
+
+    /**
+     * Returns Unicode chess glyphs for the pieces of {@code color} that are missing
+     * relative to a standard starting army — i.e. the pieces that have been captured
+     * from that side. Ordered queen, rook, bishop, knight, pawn. Promotions are
+     * approximated (a promoted pawn may read as a captured pawn), which is acceptable
+     * for this informational display.
+     *
+     * @param color the color whose captured pieces to list
+     * @return a string of glyphs, or empty if nothing has been captured
+     */
+    public String capturedGlyphs(PieceColor color){
+        int pawns = 0, knights = 0, bishops = 0, rooks = 0, queens = 0;
+        for(Piece p : pieceList){
+            if(p.getColor() != color) continue;
+            if(p instanceof Pawn)        pawns++;
+            else if(p instanceof Knight) knights++;
+            else if(p instanceof Bishop) bishops++;
+            else if(p instanceof Rook)   rooks++;
+            else if(p instanceof Queen)  queens++;
+        }
+        StringBuilder sb = new StringBuilder();
+        appendGlyph(sb, '♛', 1 - queens);  // ♛
+        appendGlyph(sb, '♜', 2 - rooks);   // ♜
+        appendGlyph(sb, '♝', 2 - bishops); // ♝
+        appendGlyph(sb, '♞', 2 - knights); // ♞
+        appendGlyph(sb, '♟', 8 - pawns);   // ♟
+        return sb.toString();
+    }
+
+    /** Appends {@code glyph} to {@code sb} {@code count} times (no-op if count {@literal <=} 0). */
+    private void appendGlyph(StringBuilder sb, char glyph, int count){
+        for(int i = 0; i < count; i++) sb.append(glyph);
     }
 
     /**

@@ -23,6 +23,9 @@ dependencies {
     // HTTP client to talk to the Spring Boot server:
     // implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+    // Modern flat Look-and-Feel for the Swing GUI.
+    implementation("com.formdev:flatlaf:3.4")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
@@ -30,6 +33,11 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// Source files use UTF-8 (e.g. Unicode chess glyphs in the GUI).
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

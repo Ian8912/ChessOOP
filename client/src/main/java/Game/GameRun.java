@@ -1,12 +1,12 @@
 package Game;
 import java.awt.BorderLayout;
-import java.awt.Font;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import com.formdev.flatlaf.FlatDarkLaf;
 
 import Piece.PieceColor;
 
@@ -28,6 +28,14 @@ public class GameRun {
     public static void main(String[] args){
 
         System.out.println("GameRun launched");
+
+        // Apply the modern flat look-and-feel before any Swing component is created
+        // so dialogs and the main window are themed consistently.
+        try {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         // Mode selection
         String[] modes = { "Player vs Player", "Player vs Computer (you play White)", "Player vs Computer (you play Black)" };
@@ -66,19 +74,12 @@ public class GameRun {
             board.setComputerPlayer(new ComputerPlayer(computerColor));
         }
 
-        JTextArea infoArea = new JTextArea(6, 40);
-        infoArea.setEditable(false);
-        infoArea.setFont(new Font("Monospaced", Font.BOLD, 14));
-        infoArea.setLineWrap(true);
-        infoArea.setWrapStyleWord(true);
-        JScrollPane scrollPane = new JScrollPane(infoArea);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
-        board.setInfoArea(infoArea);
+        SidePanel sidePanel = new SidePanel();
+        board.setSidePanel(sidePanel);
         board.initInfo();
 
         frame.add(board, BorderLayout.CENTER);
-        frame.add(scrollPane, BorderLayout.EAST);
+        frame.add(sidePanel, BorderLayout.EAST);
 
         frame.pack();
         frame.setResizable(false);
